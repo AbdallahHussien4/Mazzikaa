@@ -1,6 +1,7 @@
-def segmentLines(path):
-    img=io.imread(path)
-    img=RGB2binary(path,230)
+from commonfunctions import *
+from scipy.signal import find_peaks
+
+def segmentLines(img):
     show_images([img])
     black_hist=np.zeros((img.shape[0],1))
     for row in range(0,img.shape[0]):
