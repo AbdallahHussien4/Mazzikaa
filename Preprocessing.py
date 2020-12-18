@@ -39,7 +39,7 @@ def Rotate(img,angle):
     #show_images([img,Rimg],['Original','Rotated'])
     return Rimg 
 
-    def AdaptiveThresholding(img,BlockSize=9,C=8):
+def AdaptiveThresholding(img,BlockSize=9,C=8):
     Filter=np.ones(BlockSize**2).reshape(BlockSize,BlockSize)/BlockSize**2  #Averaging Filter
     img_F = convolve2d(img,Filter)
     img_Th = img_F[(BlockSize-1)//2:img_F.shape[0]-(BlockSize-1)//2,(BlockSize-1)//2:img_F.shape[1]-(BlockSize-1)//2] - img
