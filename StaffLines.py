@@ -36,7 +36,7 @@ def getMostCommonMinMax(aList):
 # Returns the staff lines thickness and whitespace between each two lines respectively as a tuple
 # If min_max is set to True, it returns min and max values for the lines thickness and space
 
-def getSLsThickness_WhiteSpaces(binary, min_max=False):
+def getSLsThickness_WhiteSpaces(binary, min_max=False, showHist=False):
 
     height = (binary.shape)[0]
     maBlackList = np.zeros(height, dtype=np.uint32)
@@ -62,10 +62,11 @@ def getSLsThickness_WhiteSpaces(binary, min_max=False):
                 sB = 0
             sW += 1
     
-    x = np.arange(height)
-    plt.figure(figsize =(10, 7)) 
-    plt.plot(x, maBlackList)
-    plt.show()
+    if showHist:
+        x = np.arange(height)
+        plt.figure(figsize =(10, 7)) 
+        plt.plot(x, maBlackList)
+        plt.show()
     
     if min_max:
         return getMostCommonMinMax(staffLinesWidth), getMostCommon(distBetweenStaffs)

@@ -3,16 +3,17 @@ from skimage.filters import threshold_otsu as to
 from StaffLines import getSLsThickness_WhiteSpaces
 from Preprocessing import AdaptiveThresholding as AT
 from detection import quarterEighthNoteDetection
+from segmentation import segmentLines, segmentSymbol
 
 def normalizeImage(img):
-    if(int(max(map(max, img))) == 1):
+    if(img.max() == 1):
         return np.uint16(img * 255)
     return img
 
-img = io.imread('imgs/score_4.jpg', as_gray=True)
+img = io.imread('imgs/score_2.jpg', as_gray=True)
 img = normalizeImage(img)
 binary = AT(img)
 
-print(getSLsThickness_WhiteSpaces(binary))
-show_images([img, binary])
-quarterEighthNoteDetection(binary)
+for image in segmentLines(binary):
+    segmentSymbol(image)
+#quarterEighthNoteDetection(binary)
