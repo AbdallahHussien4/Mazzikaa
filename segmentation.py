@@ -51,3 +51,36 @@ def segmentLines(img):
         imgs.append(new_img)
     show_images(imgs)
     return imgs
+
+
+def segmentSymbol(img):
+    show_images([img])
+    black_hist=np.zeros((img.shape[1],1))
+    for column in range(0,img.shape[1]):
+        black_hist[column,0]=(img[:,column] == 0).sum()
+    # x = np.arange(img.shape[1])
+    # fig = plt.figure(figsize =(10, 7))
+    # plt.plot(x,black_hist)
+    # plt.show()
+    peaks=find_peaks(black_hist.ravel(),height=1,distance=10)
+    max=peaks[1]['peak_heights'].max()
+    min=peaks[1]['peak_heights'].min()
+    avg=(max+min)/2
+    height=np.array(peaks[1]['peak_heights'])    
+    peaks=np.array(peaks[0])
+    index= peaks[height >= avg]
+    Cuts =[]
+    for i in range(0,len(index)-1):
+        Cuts.append((index[i]+index[i+1])/2)
+
+    prev=0
+    co=0
+    FinalImgs=[]
+    for c in Cuts:
+        #show_images([img[:,prev:int(c)]])
+        FinalImgs.append(img[:,prev:int(c)])
+        prev=int(c)
+    #show_images([img[:,prev:img.shape[1]]])
+    FinalImgs.append(img[:,prev:img.shape[1]])
+    show_images(FinalImgs) 
+    return FinalImgs   
