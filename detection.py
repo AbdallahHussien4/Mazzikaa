@@ -1,4 +1,3 @@
-from StaffLines import getSLsThickness_WhiteSpaces
 from commonfunctions import np, show_images
 from skimage.morphology import binary_opening, binary_closing, binary_erosion
 from skimage.draw import rectangle
@@ -6,12 +5,31 @@ from skimage.morphology import binary_opening, binary_closing, binary_erosion
 from skimage.measure import find_contours
 from cv2 import cv2     # a retarded solution for a more retarded error
 
-def quarterEighthNoteDetection(img):
 
+def getShortestDistance(curPos, linesPos):
+    minDist = -5
+    for i in linesPos:
+        if minDist < 0:
+            minDist = i
+        else:
+            dist = (curPos**2 - i**2)**0.5
+            if dist < minDist:
+                minDist = dist
+
+
+def quarterEighthNoteDetection(img, sl, dim):
+
+    linesPos = []
+    initLine = 100
+    for i in range(10, 0, -1):
+        linesPos.append(initLine - (dim / 2 + sl / 2)*i)
+    linesPos.append(initLine)
+    for i in range(1, 19):
+        linesPos.append(initLine + (dim / 2 + sl / 2)*i)
+    
     neg = img.copy()
     neg[img == 1] = 0
     neg[img == 0] = 1
-    sl, dim = getSLsThickness_WhiteSpaces(img)
     if dim % 2 == 0:
         dim += 1
     element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (dim, dim))
@@ -30,5 +48,6 @@ def quarterEighthNoteDetection(img):
         Ymax = max(contour[:,0])
         rr, cc = int((Ymax - Ymin) / 2 + Ymin) , int((Xmax - Xmin) / 2 + Xmin) 
         noteHeadsAsOnePixelImg[rr, cc] = 1
+
 
     show_images([neg, opened, noteHeadsAsOnePixelImg, verticalLinesImg])

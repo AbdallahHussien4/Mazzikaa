@@ -13,7 +13,7 @@ def normalizeImage(img):
 img = io.imread('imgs/score_2.jpg', as_gray=True)
 img = normalizeImage(img)
 binary = AT(img)
-
+staffLinesThicc, whitespaceLen = getSLsThickness_WhiteSpaces(binary)
 for image in segmentLines(binary):
     segmentSymbol(image)
-#quarterEighthNoteDetection(binary)
+quarterEighthNoteDetection(binary, staffLinesThicc, whitespaceLen)
