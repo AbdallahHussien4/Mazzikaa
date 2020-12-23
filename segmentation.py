@@ -2,7 +2,7 @@ from commonfunctions import np, show_images, io
 from scipy.signal import find_peaks
 
 def segmentLines(img):
-    show_images([img])
+    #show_images([img])
     black_hist=np.zeros((img.shape[0],1))
     for row in range(0,img.shape[0]):
         black_hist[row,0]=(img[row, :] == 0).sum()
@@ -14,11 +14,11 @@ def segmentLines(img):
     # note here : I'm not sure if this tolerance is okay or not to decide the peak value of the black lines detection
     ########################################################
     peak=int((70/100)*black_hist.max())
-    print(peak)
+    #print(peak)
     black_lines=find_peaks(black_hist.ravel(),height=peak)
-    print(black_lines)
+    #print(black_lines)
     staff_num=int(len(black_lines[0])/5)
-    print(staff_num)
+    #print(staff_num)
     Ysub=np.empty(staff_num,dtype=np.uint)
     Yinf=np.empty(staff_num,dtype=np.uint)
     m=0
@@ -46,15 +46,15 @@ def segmentLines(img):
     imgs=[]
     for i in range(0,int(len(black_lines[0])/5)):
         new_img=img[Ysub_centre[i]:Yinf_centre[i],:]
-        io.imshow(new_img)
-        io.show()
+        #io.imshow(new_img)
+        #io.show()
         imgs.append(new_img)
-    show_images(imgs)
+    #show_images(imgs)
     return imgs
 
 
 def segmentSymbol(img):
-    show_images([img])
+    # show_images([img])
     black_hist=np.zeros((img.shape[1],1))
     for column in range(0,img.shape[1]):
         black_hist[column,0]=(img[:,column] == 0).sum()
@@ -82,5 +82,5 @@ def segmentSymbol(img):
         prev=int(c)
     #show_images([img[:,prev:img.shape[1]]])
     FinalImgs.append(img[:,prev:img.shape[1]])
-    show_images(FinalImgs) 
+    #show_images(FinalImgs) 
     return FinalImgs   

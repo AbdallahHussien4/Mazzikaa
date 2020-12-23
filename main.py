@@ -15,5 +15,5 @@ img = normalizeImage(img)
 binary = AT(img)
 staffLinesThicc, whitespaceLen = getSLsThickness_WhiteSpaces(binary)
 for image in segmentLines(binary):
-    segmentSymbol(image)
+    show_images(segmentSymbol(image))
 quarterEighthNoteDetection(binary, staffLinesThicc, whitespaceLen)

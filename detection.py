@@ -35,8 +35,8 @@ def quarterEighthNoteDetection(img, sl, dim):
     element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (dim, dim))
     opened = binary_opening(neg, selem=element)
     
-    verticalElement = np.ones((3 * (dim + sl), 1), dtype=np.uint8)
-    verticalLinesImg = binary_opening(neg, selem=verticalElement)
+    # verticalElement = np.ones((3 * (dim + sl), 1), dtype=np.uint8)
+    # verticalLinesImg = binary_opening(neg, selem=verticalElement)
     
     # replacing each notehead with one pixel in its center
     contours = find_contours(opened, 0.8)
@@ -50,4 +50,4 @@ def quarterEighthNoteDetection(img, sl, dim):
         noteHeadsAsOnePixelImg[rr, cc] = 1
 
 
-    show_images([neg, opened, noteHeadsAsOnePixelImg, verticalLinesImg])
+    # show_images([neg, opened, noteHeadsAsOnePixelImg, verticalLinesImg])
