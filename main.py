@@ -1,10 +1,11 @@
-from commonfunctions import show_images, io, np
-from skimage.filters import threshold_otsu as to
-from StaffLines import getSLsThickness_WhiteSpaces
-from Preprocessing import AdaptiveThresholding as AT
-from detection import quarterEighthNoteDetection
-from segmentation import segmentLines, segmentSymbol
-
+from commonfunctions import*
+from skimage.filters import*
+from StaffLines import *
+from Preprocessing import * 
+from detection import *
+from segmentation import*
+from MakeImgHorizontal import *
+from RemoveLines import *
 def normalizeImage(img):
     if(img.max() == 1):
         return np.uint16(img * 255)
@@ -12,8 +13,14 @@ def normalizeImage(img):
 
 img = io.imread('imgs/score_2.jpg', as_gray=True)
 img = normalizeImage(img)
-binary = AT(img)
-staffLinesThicc, whitespaceLen = getSLsThickness_WhiteSpaces(binary)
-for image in segmentLines(binary):
-    show_images(segmentSymbol(image))
-quarterEighthNoteDetection(binary, staffLinesThicc, whitespaceLen)
+binary = AdaptiveThresholding(img)
+rotated=Make_IMG_HORIZONTAL(binary,1)
+staffLinesThicc, whitespaceLen = getSLsThickness_WhiteSpaces(rotated)
+segmented=segmentLines(rotated)
+removedLineImgs=[]
+count=0
+for image in segmented:
+    removedLineImgs.append(removeLines(img,staffLinesThicc))
+    show_images(removedLineImgs[count])
+    count+=1
+#quarterEighthNoteDetection(binary, staffLinesThicc, whitespaceLen)
