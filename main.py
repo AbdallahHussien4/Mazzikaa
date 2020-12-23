@@ -11,16 +11,22 @@ def normalizeImage(img):
         return np.uint16(img * 255)
     return img
 
-img = io.imread('imgs/score_2.jpg', as_gray=True)
+img = io.imread('imgs/m1.jpg', as_gray=True)
 img = normalizeImage(img)
 binary = AdaptiveThresholding(img)
+#show_images([binary])
+staffLinesThicc, whitespaceLen = getSLsThickness_WhiteSpaces(binary)
 rotated=Make_IMG_HORIZONTAL(binary,1)
-staffLinesThicc, whitespaceLen = getSLsThickness_WhiteSpaces(rotated)
+#show_images([rotated])
 segmented=segmentLines(rotated)
+#show_images([segmented[0]])
 removedLineImgs=[]
-count=0
+Symbols=[]
 for image in segmented:
-    removedLineImgs.append(removeLines(img,staffLinesThicc))
-    show_images(removedLineImgs[count])
-    count+=1
+    #removedLineImgs.append(removeLines(image,staffLinesThicc))
+    NoLines=removeLines(image,staffLinesThicc)
+    Symbols.append(segmentSymbol(NoLines))
+    show_images(segmentSymbol(NoLines))
+
+#show_images(removedLineImgs[count])
 #quarterEighthNoteDetection(binary, staffLinesThicc, whitespaceLen)

@@ -49,4 +49,5 @@ def AdaptiveThresholding(img,BlockSize=9,C=8):
     img_Th = img_Th - C              #Handle Background
     img_Out = img_Th>0
     img_Out = 1-img_Out
+    img_Out = np.uint8(img_Out*255)
     return img_Out
