@@ -48,7 +48,7 @@ def getSLsThickness_WhiteSpaces(binary, min_max=False, showHist=False):
     for row in range(height - 1):
         maBlackList[row] = (binary[row, :] == 0).sum()
 
-    sumThreshold = int(0.7 * max(maBlackList))
+    sumThreshold = int(0.5 * max(maBlackList))
     for row in range(height - 1):
         sumBlack = (binary[row, :] == 0).sum()
         if sumBlack > sumThreshold:
@@ -61,13 +61,13 @@ def getSLsThickness_WhiteSpaces(binary, min_max=False, showHist=False):
                 staffLinesWidth = np.append(staffLinesWidth, sB)
                 sB = 0
             sW += 1
-    
+
     if showHist:
         x = np.arange(height)
         plt.figure(figsize =(10, 7)) 
         plt.plot(x, maBlackList)
         plt.show()
-    
+
     if min_max:
         return getMostCommonMinMax(staffLinesWidth), getMostCommon(distBetweenStaffs)
     return getMostCommon(staffLinesWidth), getMostCommon(distBetweenStaffs)

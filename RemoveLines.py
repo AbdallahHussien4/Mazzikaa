@@ -3,12 +3,13 @@
 #Choose horizontal_projection_parameter
 #Check that vertical window doesn't exceed image border
 from commonfunctions import *
+
 def removeLines(binarized,line_height):
     horizontal_projection_parameter=(85/100)
     # Construct horizontal projection
     horizontal_projection=[]
     projection_img=np.zeros((binarized.shape[0],binarized.shape[1]))
-    projection_img[binarized==255]=0
+    projection_img[binarized==1]=0
     projection_img[binarized==0]=1
     horizontal_projection=np.sum(projection_img,axis=1)
     #Get peaks
@@ -23,6 +24,6 @@ def removeLines(binarized,line_height):
         for i in range(1,(line_height*2)+1):
             addition=np.add(binarized[peak+i,:],binarized[peak-i,:],dtype=float)
             sum_row=np.add(addition,sum_row,dtype=float)
-        sum_row=sum_row/255
-        binarized[peak,sum_row>(2*line_height+1)]=255
+        sum_row=sum_row/1
+        binarized[peak,sum_row>(2*line_height+1)]=1
     return binarized
