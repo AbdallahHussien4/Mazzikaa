@@ -28,8 +28,9 @@ for image in segmented:
     #removedLineImgs.append(removeLines(image,staffLinesThicc))
     image[image==1]=255
     NoLines=removeLines(image,staffLinesThicc)
-    Symbols.append(segmentSymbol(NoLines))
-    show_images(segmentSymbol(NoLines))
+    # Symbols.append(segmentSymbol(NoLines))
+    # show_images(segmentSymbol(NoLines))
+    show_images(SegmentSymbolMorph(NoLines))
 
 #show_images(removedLineImgs[count])
 #quarterEighthNoteDetection(binary, staffLinesThicc, whitespaceLen)

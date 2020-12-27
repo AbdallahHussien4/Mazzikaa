@@ -2,6 +2,7 @@ from commonfunctions import *
 from scipy.signal import find_peaks
 from skimage.morphology import binary_erosion,binary_dilation
 from skimage.measure import find_contours
+from skimage.draw import rectangle
 
 ##############################################this segmentation based on projection and morphology and has a bad output###########################
 #############################################but its advatage that it holds the position of every black line#####################################
@@ -195,3 +196,24 @@ def segmentSymbol(img):
     FinalImgs.append(img[:,prev:img.shape[1]])
     #show_images(FinalImgs) 
     return FinalImgs   
+
+
+def SegmentSymbolMorph(img):
+    # Negative Threasholding
+    img = img-255
+    # Get Contours
+    boxes=find_contours(img,0)
+    img_with_boxes = np.zeros(img.shape,dtype=np.bool_)
+    Cuts=[]
+    #print(boxes)
+    for box in boxes:
+        [Xmin, Xmax, Ymin, Ymax] = np.int16([min(box[:,1]),max(box[:,1]),min(box[:,0]),max(box[:,0])])
+        rr, cc = rectangle(start = (Ymin,Xmin), end = (Ymax,Xmax), shape=img.shape)
+        #Condition Should Be modified
+        if Ymax-Ymin > 0 and (Xmax-Xmin)/(Ymax-Ymin) > 0.25 and (Xmax-Xmin)/(Ymax-Ymin) < 0.6:
+            img_with_boxes[rr, cc] = img[rr,cc] #set color white
+            Cuts.append(img[:,Xmin-2:Xmax+2])
+            #Return un Ordered Objects
+            print(Xmin ,Xmax)
+    #show_images([img_with_boxes])
+    return Cuts
