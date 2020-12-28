@@ -54,11 +54,8 @@ def quarterEighthNoteDetection(segmentedSymbol, index, firstLine, lastLine, segS
     opened = binary_opening(1 - segmentedSymbol, selem=element)
     contours = find_contours(opened, 0.8)
     for contour in contours:
-        Xmin = min(contour[:,1])
-        Xmax = max(contour[:,1])
         Ymin = min(contour[:,0])
         Ymax = max(contour[:,0])
-        rr, cc = int((Ymax - Ymin) / 2 + Ymin) , int((Xmax - Xmin) / 2 + Xmin) 
+        rr = int((Ymax - Ymin) / 2 + Ymin)
         linesPositions = generateLinesArray(segmentedSymbol, firstLine[index], lastLine[index])
         lineIndex = getShortestDistance(rr + segStart[index], linesPositions)
-    
