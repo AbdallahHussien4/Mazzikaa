@@ -3,7 +3,7 @@ from skimage.morphology import binary_opening, binary_closing, binary_erosion
 from skimage.draw import rectangle
 from skimage.morphology import binary_opening, binary_closing, binary_erosion
 from skimage.measure import find_contours
-from cv2 import cv2     # a retarded solution for a more retarded error
+#from cv2 import cv2     # a retarded solution for a more retarded error
 
 
 def getShortestDistance(curPos, linesPos):
