@@ -1,4 +1,4 @@
-from commonfunctions import np, show_images, io
+from commonfunctions import *
 from scipy.signal import find_peaks
 
 def segmentLines(img):
@@ -6,27 +6,32 @@ def segmentLines(img):
     black_hist=np.zeros((img.shape[0],1))
     for row in range(0,img.shape[0]):
         black_hist[row,0]=(img[row, :] == 0).sum()
-    # x = np.arange(img.shape[0])
-    # fig = plt.figure(figsize =(10, 7))
-    # plt.plot(x,black_hist)
-    # plt.show()
+    x = np.arange(img.shape[0])
+    fig = plt.figure(figsize =(10, 7))
+    plt.plot(x,black_hist)
+    plt.show()
     ########################################################
     # note here : I'm not sure if this tolerance is okay or not to decide the peak value of the black lines detection
     ########################################################
-    peak=int((70/100)*black_hist.max())
+    peak=int((35/100)*black_hist.max())
     #print(peak)
     black_lines=find_peaks(black_hist.ravel(),height=peak)
     #print(black_lines)
-    staff_num=int(len(black_lines[0])/5)
+    staff_num=int(np.ceil(len(black_lines[0])/5))
     #print(staff_num)
     Ysub=np.empty(staff_num,dtype=np.uint)
     Yinf=np.empty(staff_num,dtype=np.uint)
     m=0
-    # print(black_lines[0])
+    #print(len(black_lines[0]))
     for i in range(0,len(black_lines[0]),5):
-        Ysub[m]=black_lines[0][i]
-        Yinf[m]=black_lines[0][i+4]
-        m+=1
+        if(i>len(black_lines[0])-5):
+            Ysub[m]=black_lines[0][i-5]
+            Yinf[m]=black_lines[0][len(black_lines[0])-1]
+            m+=1
+        else:    
+            Ysub[m]=black_lines[0][i]
+            Yinf[m]=black_lines[0][i+4]
+            m+=1
     # print("Y_sub=",Ysub)
     # print("Y_inf=",Yinf)
     Yinf_centre=np.empty(staff_num,dtype=np.uint)
@@ -58,23 +63,28 @@ def segmentSymbol(img):
     black_hist=np.zeros((img.shape[1],1))
     for column in range(0,img.shape[1]):
         black_hist[column,0]=(img[:,column] == 0).sum()
+
     # x = np.arange(img.shape[1])
     # fig = plt.figure(figsize =(10, 7))
     # plt.plot(x,black_hist)
     # plt.show()
+
     peaks=find_peaks(black_hist.ravel(),height=1,distance=10)
-    max=peaks[1]['peak_heights'].max()
-    min=peaks[1]['peak_heights'].min()
-    avg=(max+min)/2
+    #max=peaks[1]['peak_heights'].max()
+    #min=peaks[1]['peak_heights'].min()
+    #avg=(max+min)/2
     height=np.array(peaks[1]['peak_heights'])    
     peaks=np.array(peaks[0])
+    avg=height.max()*0.3
+    #print(peaks)
+    #print(height)
     index= peaks[height >= avg]
+    #print(index)
     Cuts =[]
     for i in range(0,len(index)-1):
         Cuts.append((index[i]+index[i+1])/2)
-
+    #print(Cuts)
     prev=0
-    co=0
     FinalImgs=[]
     for c in Cuts:
         #show_images([img[:,prev:int(c)]])

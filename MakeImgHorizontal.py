@@ -12,6 +12,6 @@ def Make_IMG_HORIZONTAL(BinarizedImg,percesion=1):
         rotated_img=rotate(BinarizedImg,rotation_angle,resize=True,mode='constant',cval=1)
     elif(rotation_angle>90):
         rotated_img=rotate(BinarizedImg,rotation_angle-180,resize=True,mode='constant',cval=1)
-    else:
-        rotated_img=BinarizedImg
+    if(rotation_angle==90):
+        return BinarizedImg    
     return rotated_img
