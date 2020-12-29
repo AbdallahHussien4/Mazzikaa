@@ -2,7 +2,7 @@ from commonfunctions import*
 from skimage.filters import*
 from StaffLines import *
 from Preprocessing import * 
-#from detection import *
+from detection import *
 from segmentation import*
 from MakeImgHorizontal import *
 from RemoveLines import *
@@ -11,14 +11,16 @@ def normalizeImage(img):
         return np.uint16(img * 255)
     return img
 
-img = io.imread('imgs/m1.png', as_gray=True)
-show_images([img])
+img = io.imread('imgs/m3.jpg', as_gray=True)
+#show_images([img])
 img = normalizeImage(img)
 binary = AdaptiveThresholding(img)
-#show_images([binary])
+#binary[binary==255]=1
+show_images([binary])
 staffLinesThicc, whitespaceLen = getSLsThickness_WhiteSpaces(binary)
 rotated=Make_IMG_HORIZONTAL(binary,1)
-#show_images([rotated])
+show_images([rotated])
+show_images([rotated])
 rotated[rotated==255]=1
 segmented=SegmentWithMorph(rotated)
 #show_images([segmented[0]])

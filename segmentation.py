@@ -71,8 +71,9 @@ def SegmentWithMorph(img):
     window2=np.ones((10,15))
     img=binary_erosion(img,selem=window)
     img=binary_dilation(img,selem=window)
+    #for dilation and find contours
     img=binary_dilation(img,selem=window2)
-    show_images([img])
+    #show_images([img])
     boxes=find_contours(img,0)
     imgs=[]
     yStart=[]
