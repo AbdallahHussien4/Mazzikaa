@@ -132,10 +132,10 @@ def getSLsThickness_WhiteSpacesVertically(binary, min_max=False):
     for col in range(width):
         lista = encodeList(binary[:, col])
         for x, y in lista:
-            if(y == 1):
-                distBetweenStaffs = np.append(distBetweenStaffs, x)
-            else:
+            if(y == 0):
                 staffLinesWidth = np.append(staffLinesWidth, x)
+            else:
+                distBetweenStaffs = np.append(distBetweenStaffs, x)
     if min_max:
         return getMostCommonMinMaxVertically(staffLinesWidth), getMostCommonMinMaxVertically(distBetweenStaffs)
     return getMostCommonVertically(staffLinesWidth), getMostCommonVertically(distBetweenStaffs)
@@ -156,7 +156,7 @@ def getSLsThickness_Whitespaces(binary, min_max=False, vertical=False, horizonta
         WS = minWS, maxWS
         return SL, WS
     if vertical:
-        return getSLsThickness_WhiteSpacesVertically(binary, show_hist)
+        return getSLsThickness_WhiteSpacesVertically(binary)
     if horizontal:
         return getSLsThickness_WhiteSpacesHorizontally(binary, show_hist=show_hist)
     SlWs1 = getSLsThickness_WhiteSpacesHorizontally(binary)

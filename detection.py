@@ -16,9 +16,8 @@ def getShortestDistance(curPos, linesPos):
             minIndex = index
     return minIndex
 
-def generateLinesArray(binary, firstLine, lastLine):
+def generateLinesArray(sl, dim, firstLine, lastLine):
 
-    sl, dim = getSLsThickness_Whitespaces(binary)
     linesPos = []
     initLine = firstLine       
     for i in range(10, 0, -1):
@@ -38,24 +37,22 @@ def generateLinesArray(binary, firstLine, lastLine):
     combined = []
     for i in range(len(linesPos)):
         combined.append((linesPos[i] + linesPos2[i]) / 2)
-        
     return combined
 
 
-def quarterEighthNoteDetection(segmentedSymbol, index, firstLine, lastLine, segStart):
-    
-    structElementDim = getSLsThickness_Whitespaces(segmentedSymbol, min_max=True)[1][1] # getting max of whitespaces
+def quarterEighthNoteDetection(segmentedSymbol, index, firstLine, lastLine, segStart, structElementDim, sl, dim):
     
     if structElementDim % 2 == 0:
-        structElementDim += 1
+        structElementDim -= 1
     
     element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (structElementDim, structElementDim))
-    
+
     opened = binary_opening(1 - segmentedSymbol, selem=element)
     contours = find_contours(opened, 0.8)
     for contour in contours:
         Ymin = min(contour[:,0])
         Ymax = max(contour[:,0])
         rr = int((Ymax - Ymin) / 2 + Ymin)
-        linesPositions = generateLinesArray(segmentedSymbol, firstLine[index], lastLine[index])
+        linesPositions = generateLinesArray(sl, dim, firstLine[index], lastLine[index])
         lineIndex = getShortestDistance(rr + segStart[index], linesPositions)
+        print(lineIndex)
