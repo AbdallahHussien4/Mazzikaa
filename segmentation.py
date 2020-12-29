@@ -103,8 +103,8 @@ def SegmentWithMorph(img,white_spce,staff_thick):
     yEndCent.append(int(img.shape[0]))
     for i in range(0,staff_num):
         imgs.append(orig_img[yStartCent[i]:yEndCent[i],:])
-    show_images(imgs)
-    return imgs,yStart,yEnd,yStartCent
+    #show_images(imgs)
+    return imgs
 ################################################first version of segmentation###################################
 def segmentLines(img):
     #show_images([img])

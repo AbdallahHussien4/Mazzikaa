@@ -21,17 +21,18 @@ binary = AdaptiveThresholding(img)
 staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary)
 rotated=Make_IMG_HORIZONTAL(binary,1)
 #show_images([rotated])
-segmented,firstLine, lastLine, segStart=SegmentWithMorph(binary,staff_thick=staffLinesThicc,white_spce=whitespaceLen)
+segmented=SegmentWithMorph(binary,staff_thick=staffLinesThicc,white_spce=whitespaceLen)
 removedLineImgs=[]
 Symbols=[]
 structElementDim = getSLsThickness_Whitespaces(binary, min_max=True)[1][1]
 for index, image in enumerate(segmented):
     #removedLineImgs.append(removeLines(image,staffLinesThicc))
+    firstLine, lastLine = get_StartingEnding_StaffLinePosition(image, whitespaceLen)
     NoLines=removeLines(image,staffLinesThicc)
     # Symbols.append(segmentSymbol(NoLines))
     # show_images(segmentSymbol(NoLines))
     for symbol in segmentSymbol(NoLines):
-        quarterEighthNoteDetection(symbol, index, firstLine, lastLine, segStart, structElementDim, staffLinesThicc, whitespaceLen)
+        quarterEighthNoteDetection(symbol, firstLine, lastLine, structElementDim, staffLinesThicc, whitespaceLen)
     show_images([NoLines])
 
 #show_images(removedLineImgs[count])

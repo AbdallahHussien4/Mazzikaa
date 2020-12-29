@@ -1,6 +1,30 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from skimage.morphology import binary_dilation, binary_erosion
 from itertools import groupby
+
+def get_StartingEnding_StaffLinePosition(image, whitespaceLen):
+
+    element = np.ones((1, int(whitespaceLen*1.5)))
+    element2 = np.ones((1, 15))
+    opened = binary_dilation(binary_erosion(255 - image, selem=element), selem=element2)
+
+    height, width = opened.shape
+    starting = []
+    ending = []
+    for col in range(width):
+        start = -1
+        end = -1
+        for row in range(height):
+            if opened[row, col] == 1:
+                if start == -1:
+                    start = row
+                end = row
+        starting.append(start)
+        ending.append(end)
+    
+    # gets most frequent item in list
+    return max(set(starting), key = starting.count), max(set(ending), key = ending.count) 
 
 def countFrequency(my_list): 
     freq = {} 
@@ -11,7 +35,7 @@ def countFrequency(my_list):
             freq[item] = 1
     return freq
 
-def getMostCommonHorizontally(aList):
+def getMostCommon(aList):
     freq = countFrequency(aList)
     sortedFreq = sorted(freq.items(), key=lambda x: x[1], reverse=True)
     return sortedFreq[0][0]
@@ -81,15 +105,10 @@ def getSLsThickness_WhiteSpacesHorizontally(binary, min_max=False, show_hist=Fal
     
     if min_max:
         return getMostCommonMinMaxHorizontally(staffLinesWidth), getMostCommonMinMaxHorizontally(distBetweenStaffs)
-    return getMostCommonHorizontally(staffLinesWidth), getMostCommonHorizontally(distBetweenStaffs)
+    return getMostCommon(staffLinesWidth), getMostCommon(distBetweenStaffs)
 
 def encodeList(s_list):
     return [[len(list(group)), key] for key, group in groupby(s_list)]
-
-def getMostCommonVertically(rle_list):
-    freq = countFrequency(rle_list)
-    sortedFreq = sorted(freq.items(), key=lambda x: x[1], reverse=True)
-    return sortedFreq[0][0]
 
 def getMostCommonMinMaxVertically(rle_list):
     topFive = np.empty(1, dtype=np.uint32)
@@ -138,7 +157,7 @@ def getSLsThickness_WhiteSpacesVertically(binary, min_max=False):
                 distBetweenStaffs = np.append(distBetweenStaffs, x)
     if min_max:
         return getMostCommonMinMaxVertically(staffLinesWidth), getMostCommonMinMaxVertically(distBetweenStaffs)
-    return getMostCommonVertically(staffLinesWidth), getMostCommonVertically(distBetweenStaffs)
+    return getMostCommon(staffLinesWidth), getMostCommon(distBetweenStaffs)
 
 # Takes a binary image as an input
 # Returns the staff lines thickness and whitespace between each two lines respectively as a tuple

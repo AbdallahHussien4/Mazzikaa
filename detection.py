@@ -1,9 +1,8 @@
 from commonfunctions import np, show_images
-from skimage.morphology import binary_opening, binary_closing, binary_erosion
+from skimage.morphology import binary_opening
 from skimage.draw import rectangle
-from skimage.morphology import binary_opening, binary_closing, binary_erosion
 from skimage.measure import find_contours
-from cv2 import cv2     
+from cv2 import cv2  
 from StaffLines import getSLsThickness_Whitespaces
 
 def getShortestDistance(curPos, linesPos):
@@ -40,7 +39,7 @@ def generateLinesArray(sl, dim, firstLine, lastLine):
     return combined
 
 
-def quarterEighthNoteDetection(segmentedSymbol, index, firstLine, lastLine, segStart, structElementDim, sl, dim):
+def quarterEighthNoteDetection(segmentedSymbol, firstLine, lastLine, structElementDim, sl, dim):
     segmentedSymbol[segmentedSymbol==255]=1
     if structElementDim % 2 == 0:
         structElementDim -= 1
@@ -53,5 +52,6 @@ def quarterEighthNoteDetection(segmentedSymbol, index, firstLine, lastLine, segS
         Ymin = min(contour[:,0])
         Ymax = max(contour[:,0])
         rr = int((Ymax - Ymin) / 2 + Ymin)
-        linesPositions = generateLinesArray(sl, dim, firstLine[index], lastLine[index])
-        lineIndex = getShortestDistance(rr + segStart[index], linesPositions)
+        linesPositions = generateLinesArray(sl, dim, firstLine, lastLine)
+        lineIndex = getShortestDistance(rr, linesPositions)
+        print(lineIndex)
