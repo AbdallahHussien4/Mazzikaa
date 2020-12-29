@@ -6,7 +6,7 @@ from detection import *
 from segmentation import*
 from MakeImgHorizontal import *
 from RemoveLines import *
-from detection import quarterEighthNoteDetection
+from detection import quarterEighthNoteDetection, fillHalfNoteHeads
 
 def normalizeImage(img):
     if(img.max() == 1):
@@ -19,9 +19,12 @@ img = normalizeImage(img)
 binary = AdaptiveThresholding(img)
 #show_images([binary])
 staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary)
+sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
+sl = int((sls[0] + sls[1]) / 2)
+ws = int((wss[0] + wss[1]) / 2)
 rotated=Make_IMG_HORIZONTAL(binary,1)
 #show_images([rotated])
-segmented=SegmentWithMorph(binary,staff_thick=staffLinesThicc,white_spce=whitespaceLen)
+segmented = SegmentWithMorph(binary,staff_thick=staffLinesThicc,white_spce=whitespaceLen)
 removedLineImgs=[]
 Symbols=[]
 structElementDim = getSLsThickness_Whitespaces(binary, min_max=True)[1][1]
@@ -31,9 +34,10 @@ for index, image in enumerate(segmented):
     NoLines=removeLines(image,staffLinesThicc)
     # Symbols.append(segmentSymbol(NoLines))
     # show_images(segmentSymbol(NoLines))
+    halfNoteDetection(image, firstLine, lastLine, structElementDim, wss, sl, ws)
     for symbol in segmentSymbol(NoLines):
-        quarterEighthNoteDetection(symbol, firstLine, lastLine, structElementDim, staffLinesThicc, whitespaceLen)
-    show_images([NoLines])
+        quarterEighthNoteDetection(symbol, firstLine, lastLine, structElementDim, sl, ws)
+    #show_images([image])
 
 #show_images(removedLineImgs[count])
 #quarterEighthNoteDetection(binary, staffLinesThicc, whitespaceLen)

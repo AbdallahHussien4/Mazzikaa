@@ -1,5 +1,5 @@
 from commonfunctions import np, show_images
-from skimage.morphology import binary_opening
+from skimage.morphology import binary_opening, binary_closing, binary_erosion
 from skimage.draw import rectangle
 from skimage.measure import find_contours
 from cv2 import cv2  
@@ -40,6 +40,7 @@ def generateLinesArray(sl, dim, firstLine, lastLine):
 
 
 def quarterEighthNoteDetection(segmentedSymbol, firstLine, lastLine, structElementDim, sl, dim):
+    
     segmentedSymbol[segmentedSymbol==255]=1
     if structElementDim % 2 == 0:
         structElementDim -= 1
@@ -54,4 +55,53 @@ def quarterEighthNoteDetection(segmentedSymbol, firstLine, lastLine, structEleme
         rr = int((Ymax - Ymin) / 2 + Ymin)
         linesPositions = generateLinesArray(sl, dim, firstLine, lastLine)
         lineIndex = getShortestDistance(rr, linesPositions)
-        print(lineIndex)
+        # print(lineIndex)
+
+def halfNoteDetection(segmentedSymbol, firstLine, lastLine, structElementDim, structElementDimMinMax, sl, dim):
+
+    Min = structElementDimMinMax[0]
+    Max = structElementDimMinMax[1]
+    
+    filled = fillHalfNoteHeads(segmentedSymbol, Min)
+    
+    segmentedSymbol[segmentedSymbol==255]=1
+    filled[filled==255]=1
+    
+    if structElementDim % 2 == 0:
+        structElementDim -= 1
+    
+    element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (structElementDim, structElementDim))
+    
+    opened = np.bitwise_xor(binary_opening(1 - segmentedSymbol, selem=element), binary_opening(1 - filled, selem=element)) 
+    #show_images([opened])
+    contours = find_contours(opened, 0.8)
+
+    for contour in contours:
+        Xmin = min(contour[:,1])
+        Xmax = max(contour[:,1])
+        Ymin = min(contour[:,0])
+        Ymax = max(contour[:,0])
+
+        if 3 > abs((Xmax - Xmin) - Max) >= 0 and 3 > abs((Ymax - Ymin) - Max) >= 0:
+            rr = int((Ymax - Ymin) / 2 + Ymin)
+            linesPositions = generateLinesArray(sl, dim, firstLine, lastLine)
+            lineIndex = getShortestDistance(rr, linesPositions)
+            print(lineIndex)
+    
+    show_images([opened])
+    
+# TODO move 'generateLinesArray' function call to main
+
+def fillHalfNoteHeads(image, structElementDim):
+
+    img = image.copy()
+    img[img==255]=1
+
+    if structElementDim % 2 == 0:
+        structElementDim -= 1
+    
+    element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (structElementDim, structElementDim))
+
+    closed = binary_closing(1 - img, selem=element)
+    return np.uint8((1 - closed) * 255)
+    
