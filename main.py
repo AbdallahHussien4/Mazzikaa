@@ -21,7 +21,7 @@ binary = AdaptiveThresholding(img)
 staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary)
 rotated=Make_IMG_HORIZONTAL(binary,1)
 #show_images([rotated])
-segmented,firstLine, lastLine, segStart=SegmentWithMorph(binary)
+segmented,firstLine, lastLine, segStart=SegmentWithMorph(binary,staff_thick=staffLinesThicc,white_spce=whitespaceLen)
 removedLineImgs=[]
 Symbols=[]
 structElementDim = getSLsThickness_Whitespaces(binary, min_max=True)[1][1]

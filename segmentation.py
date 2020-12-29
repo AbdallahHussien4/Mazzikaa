@@ -61,7 +61,7 @@ from skimage.draw import rectangle
 
 ##########################################this approach depends on morphological opeartions and find contours and has a great output relatively#########
 ##########################################we must modify the commented parameter below to be generic###################################
-def SegmentWithMorph(img):
+def SegmentWithMorph(img,white_spce,staff_thick):
     orig_img=img.copy()
     img[img==255]=1
     img=1-img
@@ -81,13 +81,14 @@ def SegmentWithMorph(img):
     yEnd=[]
     yStartCent=[]
     yEndCent=[]
+    aspect_ratio=cols/((4*white_spce)+(5*staff_thick))
     for box in boxes:
         yMax = int(np.max(box[:,0]))
         yMin = int(np.min(box[:,0]))
         xMax = int(np.max(box[:,1]))
         xMin = int(np.min(box[:,1]))
         #10 must be modified with parameters from slama which represents the hight of each staff(aspect ration)
-        if (xMax-xMin)/(yMax-yMin) > 10:
+        if ((aspect_ratio-10) <(xMax-xMin)/(yMax-yMin) < aspect_ratio)  :
             yStart.append(yMin)
             yEnd.append(yMax)
     staff_num=len(yStart)
