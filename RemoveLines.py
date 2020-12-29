@@ -49,7 +49,3 @@ def removeLines(binarized,line_height):
         binarized[peak,sum_row>(2*line_height+1)]=255
     #show_images([binarized])
     return binarized
-
-  
-
-

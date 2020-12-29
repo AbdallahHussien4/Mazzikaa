@@ -62,7 +62,8 @@ from skimage.draw import rectangle
 ##########################################this approach depends on morphological opeartions and find contours and has a great output relatively#########
 ##########################################we must modify the commented parameter below to be generic###################################
 def SegmentWithMorph(img):
-    orig_img=img
+    orig_img=img.copy()
+    img[img==255]=1
     img=1-img
     cols = img.shape[1]
     horizontal_size = cols // 30
@@ -71,7 +72,7 @@ def SegmentWithMorph(img):
     window2=np.ones((10,15))
     img=binary_erosion(img,selem=window)
     img=binary_dilation(img,selem=window)
-    #for dilation and find contours
+    #for dilation
     img=binary_dilation(img,selem=window2)
     #show_images([img])
     boxes=find_contours(img,0)
@@ -101,8 +102,8 @@ def SegmentWithMorph(img):
     yEndCent.append(int(img.shape[0]))
     for i in range(0,staff_num):
         imgs.append(orig_img[yStartCent[i]:yEndCent[i],:])
-    show_images(imgs) 
-    return imgs
+    show_images(imgs)
+    return imgs,yStart,yEnd,yStartCent
 ################################################first version of segmentation###################################
 def segmentLines(img):
     #show_images([img])
@@ -149,16 +150,16 @@ def segmentLines(img):
         Yinf_centre[i]=((Ysub[i+1]+Yinf[i])/2)+tolerance
     Ysub_centre[staff_num-1]=((Ysub[staff_num-1]+Yinf[staff_num-2])/2)-tolerance
     Yinf_centre[staff_num-1]=img.shape[0]
-    # print("centre_sub: ",Ysub_centre)
-    # print("centre_inf: ",Yinf_centre)
-    imgs=[]
-    for i in range(0,int(len(black_lines[0])/5)):
-        new_img=img[Ysub_centre[i]:Yinf_centre[i],:]
-        #io.imshow(new_img)
-        #io.show()
-        imgs.append(new_img)
-    #show_images(imgs)
-    return imgs
+    # # print("centre_sub: ",Ysub_centre)
+    # # print("centre_inf: ",Yinf_centre)
+    # imgs=[]
+    # for i in range(0,int(len(black_lines[0])/5)):
+    #     new_img=img[Ysub_centre[i]:Yinf_centre[i],:]
+    #     #io.imshow(new_img)
+    #     #io.show()
+    #     imgs.append(new_img)
+    # #show_images(imgs)
+    return Ysub, Yinf, Ysub_centre
 
 ##############################################this function segments symbols and must be modified to hold more accurate output#########################
 def segmentSymbol(img):
