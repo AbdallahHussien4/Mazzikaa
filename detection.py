@@ -62,12 +62,15 @@ def quarterEighthNoteDetection(segmentedSymbol, firstLine, lastLine, structEleme
         # print(lineIndex)
 
 
-def halfNoteDetection(segmentedSymbol, firstLine, lastLine, structElementDimMinMax, sl, dim):
+
+def halfNoteDetection(img, linesPositions, structElementDimMinMax):
 
     Min = structElementDimMinMax[0]
     Max = structElementDimMinMax[1]
 
-    filled = fillHalfNoteHeads(segmentedSymbol, Max)    # Send Max value of whitespaces
+    segmentedSymbol = img.copy()
+    # Send Max value of whitespaces
+    filled = fillHalfNoteHeads(segmentedSymbol, Max)
 
     segmentedSymbol[segmentedSymbol == 255] = 1
     filled[filled == 255] = 1
@@ -91,7 +94,6 @@ def halfNoteDetection(segmentedSymbol, firstLine, lastLine, structElementDimMinM
 
         if Max / 2 > (Xmax - Xmin) - Max >= 0 and Max / 2 > (Ymax - Ymin) - Max >= 0:
             rr = int((Ymax - Ymin) / 2 + Ymin)
-            linesPositions = generateLinesArray(sl, dim, firstLine, lastLine)
             lineIndex = getShortestDistance(rr, linesPositions)
             print("half:", lineIndex)
 
@@ -110,24 +112,22 @@ def fillHalfNoteHeads(image, structElementDim):
     if structElementDim % 2 == 0:
         structElementDim -= 1
 
-    element = np.ones((structElementDim * 4, 1))
+    element = np.ones((structElementDim * 3, 1))
     opened = binary_opening(img, element)
-    
+
     element = cv2.getStructuringElement(
         cv2.MORPH_ELLIPSE, (structElementDim, structElementDim))
 
     contours = find_contours(opened, 0.8)
 
+    structElementDim = int(structElementDim * 2)
     for contour in contours:
         Xmin = int(min(contour[:, 1]))
         Xmax = int(max(contour[:, 1]))
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
-
-        closed = binary_closing(img[Ymin - structElementDim: Ymax + structElementDim,
-                                    Xmin - structElementDim: Xmax + structElementDim], selem=element)
         opened[Ymin - structElementDim: Ymax + structElementDim,
-               Xmin - structElementDim: Xmax + structElementDim] = closed
-
-    #show_images([opened])
+               Xmin - structElementDim: Xmax + structElementDim] = binary_fill_holes(img[Ymin - structElementDim: Ymax + structElementDim,
+                                                                                         Xmin - structElementDim: Xmax + structElementDim])
+    #show_images([img, opened])
     return np.uint8((1 - opened) * 255)
