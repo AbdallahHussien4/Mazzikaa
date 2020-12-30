@@ -18,10 +18,6 @@ img = io.imread('imgs/m2.jpg', as_gray=True)
 img = normalizeImage(img)
 binary = AdaptiveThresholding(img)
 
-template = io.imread('imgs/symbol.jpg', as_gray=True)
-template = normalizeImage(template)
-binaryTemplate = AdaptiveThresholding(template)
-
 #show_images([binary])
 staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary)
 sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)

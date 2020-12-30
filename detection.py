@@ -42,7 +42,7 @@ def generateLinesArray(sl, dim, firstLine, lastLine):
     return combined
 
 
-def quarterEighthNoteDetection(segmentedSymbol, firstLine, lastLine, structElementDim, sl, dim):
+def quarterEighthNoteDetection(segmentedSymbol, linesPositions, structElementDim):
 
     segmentedSymbol[segmentedSymbol == 255] = 1
     if structElementDim % 2 == 0:
@@ -57,7 +57,6 @@ def quarterEighthNoteDetection(segmentedSymbol, firstLine, lastLine, structEleme
         Ymin = min(contour[:, 0])
         Ymax = max(contour[:, 0])
         rr = int((Ymax - Ymin) / 2 + Ymin)
-        linesPositions = generateLinesArray(sl, dim, firstLine, lastLine)
         lineIndex = getShortestDistance(rr, linesPositions)
         # print(lineIndex)
 
@@ -98,8 +97,6 @@ def halfNoteDetection(img, linesPositions, structElementDimMinMax):
             print("half:", lineIndex)
 
     # show_images([opened])
-
-# TODO move 'generateLinesArray' function call to main
 
 
 def fillHalfNoteHeads(image, structElementDim):
