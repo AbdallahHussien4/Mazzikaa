@@ -15,6 +15,9 @@ def normalizeImage(img):
     return img
 
 img = io.imread('imgs/m1.png', as_gray=True)
+compare=io.imread('compare.JPG',as_gray=True)
+compare=normalizeImage(compare)
+binary_compare=AdaptiveThresholding(compare)
 #for_numer=cv2.imread('imgs/m1.png')
 #for_numer = normalizeImage(for_numer)
 #for_numer = AdaptiveThresholding(for_numer)
@@ -22,13 +25,13 @@ img = io.imread('imgs/m1.png', as_gray=True)
 img = normalizeImage(img)
 binary = AdaptiveThresholding(img)
 run_experiment('raw')
-img_four=img = cv2.imread("numbers/4_0.png",cv2.IMREAD_GRAYSCALE)
+img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)
 img_three=img = cv2.imread("numbers/3_1.png",cv2.IMREAD_GRAYSCALE)
 img_three_again=img = cv2.imread("3.png",cv2.IMREAD_GRAYSCALE)
 print(runTest(img_three_again))
 
 print(runTest(img_three))
-print(runTest(img_four))
+print(runTest(img_seven))
 #show_images([binary])
 staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary)
 sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
@@ -51,6 +54,7 @@ for index, image in enumerate(segmented):
     # show_images(segmentSymbol(NoLines))
     for symbol in segmentSymbol(NoLines):
         quarterEighthNoteDetection(symbol, linesPositions, ws)
+
         #halfNoteDetection(symbol, linesPositions, wss)
     #show_images([NoLines])
 
