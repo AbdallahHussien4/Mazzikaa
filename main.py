@@ -7,17 +7,28 @@ from segmentation import*
 from MakeImgHorizontal import *
 from RemoveLines import *
 from detection import quarterEighthNoteDetection, fillHalfNoteHeads
-
+from digitsDetection import *
+from digitsClassifier import *
 def normalizeImage(img):
     if(img.max() <= 1):
         return np.uint8(img * 255)
     return img
 
-img = io.imread('imgs/m2.jpg', as_gray=True)
+img = io.imread('imgs/m1.png', as_gray=True)
+#for_numer=cv2.imread('imgs/m1.png')
+#for_numer = normalizeImage(for_numer)
+#for_numer = AdaptiveThresholding(for_numer)
 #show_images([img])
 img = normalizeImage(img)
 binary = AdaptiveThresholding(img)
+run_experiment('raw')
+img_four=img = cv2.imread("numbers/4_0.png",cv2.IMREAD_GRAYSCALE)
+img_three=img = cv2.imread("numbers/3_1.png",cv2.IMREAD_GRAYSCALE)
+img_three_again=img = cv2.imread("3.png",cv2.IMREAD_GRAYSCALE)
+print(runTest(img_three_again))
 
+print(runTest(img_three))
+print(runTest(img_four))
 #show_images([binary])
 staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary)
 sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
@@ -33,6 +44,8 @@ for index, image in enumerate(segmented):
     halfNoteDetection(image, linesPositions, wss)
     quarterEighthNoteDetection(image, linesPositions, ws)
     NoLines=removeLines(image, sls[1])
+    detectDigits(NoLines[:,60:90],binary[:,60:90])
+    show_images([NoLines[:,60:90]])
     #show_images([NoLines])
     # Symbols.append(segmentSymbol(NoLines))
     # show_images(segmentSymbol(NoLines))
@@ -43,3 +56,5 @@ for index, image in enumerate(segmented):
 
 #show_images(removedLineImgs[count])
 #quarterEighthNoteDetection(binary, staffLinesThicc, whitespaceLen)
+
+
