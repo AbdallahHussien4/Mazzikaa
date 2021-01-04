@@ -6,7 +6,7 @@ from itertools import groupby
 def get_StartingEnding_StaffLinePosition(image, whitespaceLen):
 
     element = np.ones((1, int(whitespaceLen*1.5)))
-    element2 = np.ones((1, 15))
+    element2 = np.ones((1, 12))
     opened = binary_dilation(binary_erosion(255 - image, selem=element), selem=element2)
 
     height, width = opened.shape
@@ -110,10 +110,14 @@ def getSLsThickness_WhiteSpacesHorizontally(binary, min_max=False, show_hist=Fal
 def encodeList(s_list):
     return [[len(list(group)), key] for key, group in groupby(s_list)]
 
-def getMostCommonMinMaxVertically(rle_list):
+def getMostCommonMinMaxVertically(rle_list, show_hist=False):
     topFive = np.empty(1, dtype=np.uint32)
     freq = countFrequency(rle_list)
     sortedFreq = sorted(freq.items(), key=lambda x: x[1], reverse=True)
+    if show_hist:
+        x, y = zip(*sorted(freq.items())[0:50])
+        plt.plot(x, y)
+        plt.show()
     topFive = sortedFreq[0:5]
     mMin = sortedFreq[0][0]
     mMax = sortedFreq[0][0]
@@ -143,7 +147,7 @@ def getMostCommonMinMaxVertically(rle_list):
                 mMax = i[0]
     return mMin, mMax
 
-def getSLsThickness_WhiteSpacesVertically(binary, min_max=False):
+def getSLsThickness_WhiteSpacesVertically(binary, min_max=False, show_hist=False):
 
     distBetweenStaffs = np.empty(1, dtype=np.uint32)
     staffLinesWidth = np.empty(1, dtype=np.uint32)
@@ -156,7 +160,7 @@ def getSLsThickness_WhiteSpacesVertically(binary, min_max=False):
             else:
                 distBetweenStaffs = np.append(distBetweenStaffs, x)
     if min_max:
-        return getMostCommonMinMaxVertically(staffLinesWidth), getMostCommonMinMaxVertically(distBetweenStaffs)
+        return getMostCommonMinMaxVertically(staffLinesWidth, show_hist=show_hist), getMostCommonMinMaxVertically(distBetweenStaffs, show_hist=show_hist)
     return getMostCommon(staffLinesWidth), getMostCommon(distBetweenStaffs)
 
 # Takes a binary image as an input
@@ -167,17 +171,21 @@ def getSLsThickness_Whitespaces(binary, min_max=False, vertical=False, horizonta
     if min_max:
         SLs1, WS1 = getSLsThickness_WhiteSpacesHorizontally(binary, min_max=True)
         SLs2, WS2 = getSLsThickness_WhiteSpacesVertically(binary, min_max=True)
-        minSL = min(SLs1[0], SLs2[0])
-        maxSL = max(SLs1[1], SLs2[1])
-        minWS = min(WS1[0], WS2[0])
-        maxWS = max(WS1[1], WS2[1])
+        # minSL = min(SLs1[0], SLs2[0])
+        # maxSL = max(SLs1[1], SLs2[1])
+        # minWS = min(WS1[0], WS2[0])
+        # maxWS = max(WS1[1], WS2[1])
+        minSL = int((SLs1[0] + SLs2[0]) / 2)
+        maxSL = int((SLs1[1] + SLs2[1]) / 2)
+        minWS = int((WS1[0] + WS2[0]) / 2)
+        maxWS = int((WS1[1] + WS2[1]) / 2)
         SL = minSL, maxSL
         WS = minWS, maxWS
         return SL, WS
     if vertical:
-        return getSLsThickness_WhiteSpacesVertically(binary)
+        return getSLsThickness_WhiteSpacesVertically(binary, min_max=min_max, show_hist=show_hist)
     if horizontal:
-        return getSLsThickness_WhiteSpacesHorizontally(binary, show_hist=show_hist)
+        return getSLsThickness_WhiteSpacesHorizontally(binary, min_max=min_max, show_hist=show_hist)
     SlWs1 = getSLsThickness_WhiteSpacesHorizontally(binary)
     SlWs2 = getSLsThickness_WhiteSpacesVertically(binary)
     return int((SlWs1[0] + SlWs2[0]) / 2), int((SlWs1[1] + SlWs2[1]) / 2)

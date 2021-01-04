@@ -5,6 +5,7 @@ from skimage.measure import find_contours
 from cv2 import cv2
 from StaffLines import getSLsThickness_Whitespaces
 from scipy.ndimage.morphology import binary_fill_holes
+from detectSymbols import matchNoteHead
 
 
 def getShortestDistance(curPos, linesPos):
@@ -42,24 +43,57 @@ def generateLinesArray(sl, dim, firstLine, lastLine):
     return combined
 
 
-def quarterEighthNoteDetection(segmentedSymbol, linesPositions, structElementDim):
+def quarterEighthNoteDetection(segmentedSymbol, linesPositions, structElementDimMinMax):
 
-    segmentedSymbol[segmentedSymbol == 255] = 1
-    if structElementDim % 2 == 0:
-        structElementDim -= 1
+    img = segmentedSymbol.copy()
+    img[segmentedSymbol == 255] = 0
+    img[segmentedSymbol == 1] = 0
+    img[segmentedSymbol == 0] = 1
 
-    element = cv2.getStructuringElement(
-        cv2.MORPH_ELLIPSE, (structElementDim, structElementDim))
+    Max = structElementDimMinMax[1]
+    
+    Min = Max - 1
 
-    opened = binary_opening(1 - segmentedSymbol, selem=element)
+    if Min % 2 == 0:
+        Min += 1
+
+    if Max % 2 == 0:
+        Max -= 1
+
+    element = np.ones((Max * 4, int(Min/2)))
+
+    opened = binary_opening(img, element)
+
+    element = np.ones((Min * 3, 1))
+
+    opened = binary_opening(img - opened, element)
+
+    minElement = cv2.getStructuringElement(
+        cv2.MORPH_ELLIPSE, (Min, Min))
+
+    maxElement = cv2.getStructuringElement(
+        cv2.MORPH_ELLIPSE, (Max, Max))
+
     contours = find_contours(opened, 0.8)
-    for contour in contours:
-        Ymin = min(contour[:, 0])
-        Ymax = max(contour[:, 0])
-        rr = int((Ymax - Ymin) / 2 + Ymin)
-        lineIndex = getShortestDistance(rr, linesPositions)
-        # print(lineIndex)
 
+    structElementDim = Max + 2
+
+    for contour in contours:
+        Xmin = int(min(contour[:, 1]))
+        Xmax = int(max(contour[:, 1]))
+        Ymin = int(min(contour[:, 0]))
+        Ymax = int(max(contour[:, 0]))
+        opened[Ymin: Ymax + structElementDim,
+               Xmin - structElementDim: Xmax] = binary_dilation(binary_erosion(img[Ymin: Ymax + structElementDim,
+                                                                                   Xmin - structElementDim: Xmax], selem=minElement), selem=maxElement)
+        opened[Ymin - structElementDim: Ymax,
+               Xmin: Xmax + structElementDim] = binary_dilation(binary_erosion(img[Ymin - structElementDim: Ymax,
+                                                                                   Xmin: Xmax + structElementDim], selem=minElement), selem=maxElement)
+    show_images([1 - opened])
+    matches = matchNoteHead(1 - opened, Min)
+    for rr in matches:
+        lineIndex = getShortestDistance(rr, linesPositions)
+        print(lineIndex)
 
 
 def halfNoteDetection(img, linesPositions, structElementDimMinMax):
@@ -126,5 +160,5 @@ def fillHalfNoteHeads(image, structElementDim):
         opened[Ymin - structElementDim: Ymax + structElementDim,
                Xmin - structElementDim: Xmax + structElementDim] = binary_fill_holes(img[Ymin - structElementDim: Ymax + structElementDim,
                                                                                          Xmin - structElementDim: Xmax + structElementDim])
-    #show_images([img, opened])
+    # show_images([img, opened])
     return np.uint8((1 - opened) * 255)
