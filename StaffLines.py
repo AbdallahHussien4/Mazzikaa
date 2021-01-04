@@ -1,14 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from skimage.morphology import binary_dilation, binary_erosion
+from skimage.morphology import binary_dilation, binary_erosion, binary_opening
 from itertools import groupby
+from commonfunctions import show_images
 
 def get_StartingEnding_StaffLinePosition(image, whitespaceLen):
 
-    element = np.ones((1, int(whitespaceLen*1.5)))
-    element2 = np.ones((1, 12))
-    opened = binary_dilation(binary_erosion(255 - image, selem=element), selem=element2)
-
+    element = np.ones((1, int(whitespaceLen*2)))
+    opened = binary_opening(255 - image, selem=element)
     height, width = opened.shape
     starting = []
     ending = []
