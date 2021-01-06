@@ -1,4 +1,4 @@
-from cv2 import cv2
+import cv2 as cv2
 import numpy as np
 
 def match(img, templates, start_percent=50, stop_percent=150, threshold=0.8):

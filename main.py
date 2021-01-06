@@ -9,7 +9,7 @@ from RemoveLines import *
 from detection import quarterEighthNoteDetection, fillHalfNoteHeads
 from digitsDetection import *
 from digitsClassifier import *
-from cv2 import cv2
+import cv2 as cv2
 from TemplateMatching import match
 
 flag_paths = [  "flags/eighth_flag_1.jpg",
@@ -70,15 +70,8 @@ for contour in contours:
 print(xCenters, yCenters)
 print(len(xCenters))
 show_images([binary, result])
-# run_experiment('raw')
-# img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)
-# img_three=img = cv2.imread("numbers/3_1.png",cv2.IMREAD_GRAYSCALE)
-# img_three_again=img = cv2.imread("3.png",cv2.IMREAD_GRAYSCALE)
-# print(runTest(img_three_again))
 
-# print(runTest(img_three))
-# print(runTest(img_seven))
-# show_images([binary])
+#show_images([binary])
 # staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary, vertical=True)
 # sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
 # sl = int((sls[0] + sls[1]) / 2)
