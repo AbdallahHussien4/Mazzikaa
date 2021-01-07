@@ -137,7 +137,6 @@ def matchNotes(binary, ws, linesPositions):
 #                          QUARTER NOTES                             #
 #                                                                    #
 ######################################################################
-
     ws += 1
     
     quarter_imgs = [ cv2.imread(quarter, 0) for quarter in quarterPaths]
@@ -161,22 +160,39 @@ def matchNotes(binary, ws, linesPositions):
             result[i[0][j] + int(ws / 2), i[1][j]+ int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
     contours = find_contours(result, 0.8)
-    xCenters = []
-    yCenters = []
+
     for contour in contours:
         Xmin = int(min(contour[:, 1]))
         Xmax = int(max(contour[:, 1]))
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
-        xCenters.append((Xmax - Xmin) / 2 + Xmin)
-        yCenters.append((Ymax - Ymin) / 2 + Ymin)
-
-    for i in range(len(xCenters)):
-        pos = getShortestDistance(yCenters[i], linesPositions)
-        Notes.append(Note(xCenters[i], yCenters[i], positionNotationDict[pos], 4))
-
-    # print(xCenters, yCenters)
-    # print(len(xCenters))
+        x = int((Xmax - Xmin) / 2 + Xmin)
+        y = int((Ymax - Ymin) / 2 + Ymin)
+        pos = getShortestDistance(y, linesPositions)
+        Notes.append(Note(x, y, positionNotationDict[pos], 4))
+        
+        #TODO Don't check all rows in that area, instead, bound it with vertical WS ratio 
+        sharp = matchSharp(binary[:,x-int(ws*HorizontalWhiteSpaceRatio.SHARP.value)-ws:x],ws)
+        DoubleSharp = matchDoubleSharp(binary[:,x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_SHARP.value)-ws:x],ws)
+        Flat = matchFlat(binary[:,x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAT.value)-ws:x],ws)
+        if sharp ==1:
+            print("Sharp")
+        elif DoubleSharp==1:
+            print("Double Sharp")
+        elif Flat==2:
+            print("Double Flat")      
+        elif Flat==1:
+            print("Flat")
+        else:
+            print("No")    
+        
+    # for x in xCenters:
+    #     x=int(x)
+    #     #print(x)
+    #     result[:,x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAT.value)-ws:x]=255 
+    # new=result*binary    
+    #print(xCenters, yCenters)
+    #print(xCenters)
     #binary[binary == 255] = 1
     #result2 = np.bitwise_or(binary, result)
     #show_images([result2])
@@ -293,14 +309,13 @@ def matchNotes(binary, ws, linesPositions):
 #############                                                                   ##############
 ##############################################################################################
 
-def matchAccidentals(binary, ws):
-
 ######################################################################
 #                                                                    #
 #                               SHARPS                               #
 #                                                                    #
 ######################################################################
-    
+
+def matchSharp(binary, ws):
     sharp_imgs = [ cv2.imread(sharp, 0) for sharp in sharpPaths]
     
     sharps = []
@@ -308,6 +323,7 @@ def matchAccidentals(binary, ws):
         scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.SHARP.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
+        #print(int(cols / scaleFactor)+ws)
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         sharps.append(i)
     if ws % 2 == 0:
@@ -338,14 +354,16 @@ def matchAccidentals(binary, ws):
     #show_images([result2])
     #TODO build an array of sharps containing their positions
     #show_images([result])
-
+    if(len(xCenters)>0):
+        return 1
+    return 0    
 
 ######################################################################
 #                                                                    #
 #                               FLATS                                #
 #                                                                    #
 ######################################################################
-    
+def matchFlat(binary,ws):    
     flat_imgs = [ cv2.imread(flat, 0) for flat in flatPaths]
     
     flats = []
@@ -353,6 +371,7 @@ def matchAccidentals(binary, ws):
         scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.FLAT.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
+        #print(int(cols / scaleFactor+ws))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         flats.append(i)
 
@@ -376,13 +395,19 @@ def matchAccidentals(binary, ws):
         Ymax = int(max(contour[:, 0]))
         xCenters.append((Xmax - Xmin) / 2 + Xmin)
         yCenters.append((Ymax - Ymin) / 2 + Ymin)
+        if(abs(Xmax-Xmin-HorizontalWhiteSpaceRatio.FLAT.value*ws)<abs(Xmax-Xmin-HorizontalWhiteSpaceRatio.DOUBLE_FLAT.value*ws)):
+            return 1
+        else:
+            return 2   
     # print(xCenters, yCenters)
     # print(len(xCenters))
     #binary[binary == 255] = 1
     #result2 = np.bitwise_or(binary, result)
     #TODO build an array of half notes containing their positions
-    #show_images(flats)
-    show_images([result])
+    #show_images([result])
+    if(len(xCenters)>0):
+        return 1
+    return 0  
 
 
 ######################################################################
@@ -390,7 +415,7 @@ def matchAccidentals(binary, ws):
 #                          DOUBLE SHARPS                             #
 #                                                                    #
 ######################################################################
-    
+def matchDoubleSharp(binary,ws):    
     doubleSharp_imgs = [ cv2.imread(doubleSharp, 0) for doubleSharp in doubleSharpPaths]
     
     doubleSharps = []
@@ -398,6 +423,7 @@ def matchAccidentals(binary, ws):
         scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.DOUBLE_SHARP.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
+        #print(int(cols / scaleFactor+ws))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         print('DSharp: ', (cols / scaleFactor) / ws)
         doubleSharps.append(i)
@@ -425,8 +451,10 @@ def matchAccidentals(binary, ws):
     # print(len(xCenters))
     #binary[binary == 255] = 1
     #result2 = np.bitwise_or(binary, result)
-    show_images(doubleSharps)
-    show_images([result])
+    #show_images([result])
+    if(len(xCenters)>0):
+        return 1
+    return 0  
     #TODO build an array of half notes containing their positions
 
 

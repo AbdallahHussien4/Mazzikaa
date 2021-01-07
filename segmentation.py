@@ -69,12 +69,13 @@ def SegmentWithMorph(img,white_spce,staff_thick):
     horizontal_size = cols // 30
     window=np.ones((1,horizontal_size))
     #this parameter must be modified
-    window2=np.ones((10,15))
+    staff_height=int(((4*white_spce)+(5*staff_thick))//3)
+    window2=np.ones((staff_height,20))
     img=binary_erosion(img,selem=window)
     img=binary_dilation(img,selem=window)
     #for dilation
     img=binary_dilation(img,selem=window2)
-    #show_images([img])
+    show_images([img])
     boxes=find_contours(img,0)
     imgs=[]
     yStart=[]
@@ -87,8 +88,7 @@ def SegmentWithMorph(img,white_spce,staff_thick):
         yMin = int(np.min(box[:,0]))
         xMax = int(np.max(box[:,1]))
         xMin = int(np.min(box[:,1]))
-        #10 must be modified with parameters from slama which represents the hight of each staff(aspect ration)
-        if ((aspect_ratio-10) <(xMax-xMin)/(yMax-yMin) < aspect_ratio)  :
+        if ((aspect_ratio*0.25) <(xMax-xMin)/(yMax-yMin) < aspect_ratio):
             yStart.append(yMin)
             yEnd.append(yMax)
     staff_num=len(yStart)
