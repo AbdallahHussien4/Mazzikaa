@@ -1,4 +1,4 @@
-import cv2 as cv2
+from cv2 import cv2
 import numpy as np
 import skimage.io as io
 from RemoveLines import removeLines
@@ -34,7 +34,7 @@ positionNotationDict = {
     20: 'c'
 }
 
-clefPaths=["clefs/treble_1.jpg","clefs/treble_2.jpg"]
+clefPaths = ["clefs/treble_1.jpg", "clefs/treble_2.jpg"]
 quarterPaths = ["Notes/quarter.jpg"]
 halfPaths = ["Notes/half1.jpg", "Notes/half2.jpg"]
 wholePaths = ["Notes/whole.jpg"]
@@ -55,15 +55,17 @@ class HorizontalWhiteSpaceRatio(Enum):
     FLAG = 1
     DOUBLE_FLAG = 1.2
     TRIPLE_FLAG = 1.1
-    CLEF=2.7
+    CLEF = 2.7
+
 
 class StaffLinesRatio(Enum):
 
     BEAMS_lOWER = 3
     BEAMS_UPPER = 8
 
+
 class VerticalWhiteSpaceRatio(Enum):
-    CLEF=8
+    CLEF = 8
     QUARTER_NOTE = 1
     HALF_NOTE = 1
     WHOLE_NOTE = 1
@@ -75,8 +77,9 @@ class VerticalWhiteSpaceRatio(Enum):
     DOUBLE_FLAG = 3.5
     TRIPLE_FLAG = 4
 
+
 class MatchingThreshold(Enum):
-    CLEF=0.4
+    CLEF = 0.4
     QUARTER_NOTE = 0.7
     HALF_NOTE = 0.7
     WHOLE_NOTE = 0.7
@@ -149,8 +152,7 @@ def matchNotes(binary, sl, ws, linesPositions):
 
     quarters = []
     for i in quarter_imgs:
-        scaleFactor = i.shape[0] / \
-            (ws * VerticalWhiteSpaceRatio.QUARTER_NOTE.value)
+        scaleFactor = i.shape[0] / (ws * VerticalWhiteSpaceRatio.QUARTER_NOTE.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
@@ -162,7 +164,6 @@ def matchNotes(binary, sl, ws, linesPositions):
         cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, quarters, 50, 150,
                       MatchingThreshold.QUARTER_NOTE.value)[0]
-    # print(locations)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
@@ -175,8 +176,8 @@ def matchNotes(binary, sl, ws, linesPositions):
         Xmax = int(max(contour[:, 1]))
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
-        x = int((Xmax - Xmin) / 2 + Xmin)
-        y = int((Ymax - Ymin) / 2 + Ymin)
+        x = int((Xmax + Xmin) / 2)
+        y = int((Ymax + Ymin) / 2)
         pos = getShortestDistance(y, linesPositions)
 
         # TODO Don't check all rows in that area, instead, bound it with vertical WS ratio
@@ -212,14 +213,6 @@ def matchNotes(binary, sl, ws, linesPositions):
 
         Notes.append(note)
 
-    #print(xCenters, yCenters)
-    # print(xCenters)
-    #binary[binary == 255] = 1
-    #result2 = np.bitwise_or(binary, result)
-    # show_images([result2])
-    # TODO build an array of quarter notes containing their positions
-    #show_images([result, binary])
-
 
 ######################################################################
 #                                                                    #
@@ -242,25 +235,20 @@ def matchNotes(binary, sl, ws, linesPositions):
         cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, halfs, 70, 140,
                       MatchingThreshold.HALF_NOTE.value)[0]
-    # print(locations)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
     contours = find_contours(result, 0.8)
-    xCenters = []
-    yCenters = []
     for contour in contours:
         Xmin = int(min(contour[:, 1]))
         Xmax = int(max(contour[:, 1]))
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
-        xCenters.append((Xmax - Xmin) / 2 + Xmin)
-        yCenters.append((Ymax - Ymin) / 2 + Ymin)
-
-    for i in range(len(xCenters)):
-        pos = getShortestDistance(yCenters[i], linesPositions)
-        Notes.append(Note(xCenters[i], yCenters[i],
+        xCenter = (Xmax + Xmin) / 2
+        yCenter = (Ymax + Ymin) / 2
+        pos = getShortestDistance(yCenter, linesPositions)
+        Notes.append(Note(xCenter, yCenter,
                           positionNotationDict[pos], 2))
 
 
@@ -286,23 +274,21 @@ def matchNotes(binary, sl, ws, linesPositions):
         cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, wholes, 70, 140,
                       MatchingThreshold.WHOLE_NOTE.value)[0]
-    # print(locations)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
     contours = find_contours(result, 0.8)
-    xCenters = []
-    yCenters = []
     for contour in contours:
         Xmin = int(min(contour[:, 1]))
         Xmax = int(max(contour[:, 1]))
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
-        pos = getShortestDistance((Ymax - Ymin) / 2 + Ymin, linesPositions)
-        Notes.append(Note((Xmax - Xmin) / 2 + Xmin, (Ymax - Ymin) / 2 + Ymin,
-                          positionNotationDict[pos], 1))
-
+        xCenter = (Xmax + Xmin) / 2
+        yCenter = (Ymax + Ymin) / 2
+        pos = getShortestDistance(yCenter, linesPositions)
+        Notes.append(Note(xCenter, yCenter,
+                          positionNotationDict[pos], 2))
 
     Notes.sort(key=lambda x: x.xPosition)
 
@@ -316,10 +302,9 @@ def matchNotes(binary, sl, ws, linesPositions):
         if Notes[i].duration == 4 and Notes[i + 1].duration == 4:
             col = (Notes[i].xPosition + Notes[i + 1].xPosition) / 2
             encoded = encodeList(binary[:, int(col)])
-            print('From', i, 'to', i+1, encoded)
             for x, y in encoded:
                 if y == 0:
-                    if sl * StaffLinesRatio.BEAMS_lOWER.value < x < sl *StaffLinesRatio.BEAMS_UPPER.value:
+                    if sl * StaffLinesRatio.BEAMS_lOWER.value < x < sl * StaffLinesRatio.BEAMS_UPPER.value:
                         if finished != i:
                             Notes[i].numBeams += 1
                         Notes[i+1].numBeams += 1
@@ -342,9 +327,11 @@ def matchNotes(binary, sl, ws, linesPositions):
 #############                                                                   ##############
 #############                                                                   ##############
 ##############################################################################################
-def matchClefs(binary,ws):
-    clef_imgs = [ cv2.imread(clef, 0) for clef in clefPaths]
-    clefs=[]
+
+
+def matchClefs(binary, ws):
+    clef_imgs = [cv2.imread(clef, 0) for clef in clefPaths]
+    clefs = []
     for i in clef_imgs:
         scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.CLEF.value)
         rows, cols = i.shape
@@ -353,11 +340,11 @@ def matchClefs(binary,ws):
         clefs.append(i)
     result = np.zeros_like(binary, dtype=np.uint8)
     element = cv2.getStructuringElement(
-    cv2.MORPH_ELLIPSE, (ws, ws))
+        cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, clefs, 50, 150, MatchingThreshold.CLEF.value)[0]
     for i in locations:
         for j in range(len(i[0])):
-            result[i[0][j] + int(ws / 2), i[1][j]+ int(ws / 2)] = 1
+            result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
     contours = find_contours(result, 0.8)
     for contour in contours:
@@ -365,10 +352,11 @@ def matchClefs(binary,ws):
         Xmax = int(max(contour[:, 1]))
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
-        xCenters=int(((Xmax - Xmin) / 2 + Xmin))
-        yCenters=int(((Ymax - Ymin) / 2 + Ymin))
-        binary[yCenters:yCenters+int((VerticalWhiteSpaceRatio.CLEF.value*ws)),xCenters-ws:xCenters+int((HorizontalWhiteSpaceRatio.CLEF.value*ws))]=255
-    
+        xCenters = int(((Xmax - Xmin) / 2 + Xmin))
+        yCenters = int(((Ymax - Ymin) / 2 + Ymin))
+        binary[yCenters:yCenters+int((VerticalWhiteSpaceRatio.CLEF.value*ws)),
+               xCenters-ws:xCenters+int((HorizontalWhiteSpaceRatio.CLEF.value*ws))] = 255
+
     show_images([result, binary])
 
 
@@ -395,40 +383,13 @@ def matchSharp(binary, ws):
         scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.SHARP.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
-        #print(int(cols / scaleFactor)+ws)
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         sharps.append(i)
-    if ws % 2 == 0:
-        ws += 1
-    result = np.zeros_like(binary, dtype=np.uint8)
-    element = cv2.getStructuringElement(
-        cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, sharps, 70, 140,
                       MatchingThreshold.SHARP.value)[0]
-    # print(locations)
     for i in locations:
-        for j in range(len(i[0])):
-            result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
-    result = binary_dilation(result, selem=element)
-    contours = find_contours(result, 0.8)
-    xCenters = []
-    yCenters = []
-    for contour in contours:
-        Xmin = int(min(contour[:, 1]))
-        Xmax = int(max(contour[:, 1]))
-        Ymin = int(min(contour[:, 0]))
-        Ymax = int(max(contour[:, 0]))
-        xCenters.append((Xmax - Xmin) / 2 + Xmin)
-        yCenters.append((Ymax - Ymin) / 2 + Ymin)
-    # print(xCenters, yCenters)
-    # print(len(xCenters))
-    #binary[binary == 255] = 1
-    #result2 = np.bitwise_or(binary, result)
-    # show_images([result2])
-    # TODO build an array of sharps containing their positions
-    # show_images([result])
-    if(len(xCenters) > 0):
-        return 1
+        if(len(i[0]) > 0):
+            return 1
     return 0
 
 ######################################################################
@@ -454,34 +415,18 @@ def matchFlat(binary, ws):
         cv2.MORPH_ELLIPSE, (ws, ws))
     # TODO if we match more templates then send them all and check all locations
     locations = match(binary, flats, 70, 140, MatchingThreshold.FLAT.value)[0]
-    # print(locations)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
     contours = find_contours(result, 0.8)
-    xCenters = []
-    yCenters = []
     for contour in contours:
         Xmin = int(min(contour[:, 1]))
         Xmax = int(max(contour[:, 1]))
-        Ymin = int(min(contour[:, 0]))
-        Ymax = int(max(contour[:, 0]))
-        xCenters.append((Xmax - Xmin) / 2 + Xmin)
-        yCenters.append((Ymax - Ymin) / 2 + Ymin)
         if(abs(Xmax-Xmin-HorizontalWhiteSpaceRatio.FLAT.value*ws) < abs(Xmax-Xmin-HorizontalWhiteSpaceRatio.DOUBLE_FLAT.value*ws)):
             return 1
         else:
             return 2
-    # print(xCenters, yCenters)
-    # print(len(xCenters))
-    #binary[binary == 255] = 1
-    #result2 = np.bitwise_or(binary, result)
-    # TODO build an array of half notes containing their positions
-    # show_images([result])
-    if(len(xCenters) > 0):
-        return 1
-    return 0
 
 
 ######################################################################
@@ -502,36 +447,13 @@ def matchDoubleSharp(binary, ws):
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         doubleSharps.append(i)
 
-    result = np.zeros_like(binary, dtype=np.uint8)
-    element = cv2.getStructuringElement(
-        cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, doubleSharps, 70, 140,
                       MatchingThreshold.DOUBLE_SHARP.value)[0]
-    # print(locations)
     for i in locations:
-        for j in range(len(i[0])):
-            result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
-    result = binary_dilation(result, selem=element)
-    contours = find_contours(result, 0.8)
-    xCenters = []
-    yCenters = []
-    for contour in contours:
-        Xmin = int(min(contour[:, 1]))
-        Xmax = int(max(contour[:, 1]))
-        Ymin = int(min(contour[:, 0]))
-        Ymax = int(max(contour[:, 0]))
-        xCenters.append((Xmax - Xmin) / 2 + Xmin)
-        yCenters.append((Ymax - Ymin) / 2 + Ymin)
-    # print(xCenters, yCenters)
-    # print(len(xCenters))
-    #binary[binary == 255] = 1
-    #result2 = np.bitwise_or(binary, result)
-    # show_images([result])
-    if(len(xCenters) > 0):
-        return 1
+        if(len(i[0]) > 0):
+            return 1
     return 0
     # TODO build an array of half notes containing their positions
-
 
 ##############################################################################################
 #############                                                                   ##############
@@ -542,6 +464,7 @@ def matchDoubleSharp(binary, ws):
 #############                                                                   ##############
 #############                                                                   ##############
 ##############################################################################################
+
 
 def matchFlags(binary, ws, numFlags=1):
 
@@ -567,23 +490,37 @@ def matchFlags(binary, ws, numFlags=1):
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         flags.append(i)
-    if ws % 2 == 0:
-        ws += 1
-    result = np.zeros_like(binary, dtype=np.uint8)
-    element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ws, ws))
+
     locations = match(binary, flags, 70, 140, flagMatchingThresh)[0]
     for i in locations:
-        for j in range(len(i[0])):
-            result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
-    result = binary_dilation(result, selem=element)
-    contours = find_contours(result, 0.8)
-
-    # print(xCenters, yCenters)
-    # print(len(xCenters))
-    #binary[binary == 255] = 1
-    #result2 = np.bitwise_or(binary, result)
-    # show_images([result2])
-    # show_images([result])
-    if(len(contours) > 0):
-        return 1
+        if(len(i[0]) > 0):
+            return 1
     return 0
+
+
+##############################################################################################
+#############                                                                   ##############
+#############                                                                   ##############
+#############                                                                   ##############
+#############                            DEBUGGING                              ##############
+#############                                                                   ##############
+#############                                                                   ##############
+#############                                                                   ##############
+##############################################################################################
+
+    # if ws % 2 == 0:
+    #     ws += 1
+    # result = np.zeros_like(binary, dtype=np.uint8)
+    # element = cv2.getStructuringElement(
+    #     cv2.MORPH_ELLIPSE, (ws, ws))
+    # locations = match(binary, sharps, 70, 140,
+    #                   MatchingThreshold.SHARP.value)[0]
+    # for i in locations:
+    #     for j in range(len(i[0])):
+    #         result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
+    # result = binary_dilation(result, selem=element)
+    # contours = find_contours(result, 0.8)
+
+    # if(len(contours) > 0):
+    #     return 1
+    # return 0
