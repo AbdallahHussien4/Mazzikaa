@@ -3,15 +3,7 @@
 #Choose horizontal_projection_parameter
 #Check that vertical window doesn't exceed image border
 from commonfunctions import *
-
-def RGB2binary(img,threshold):
-    img=np.array(img,dtype=np.uint8)
-    Vimg=np.reshape(img,(img.shape[0]*img.shape[1],1))
-    Vimg[(Vimg<threshold)]=0
-    Vimg[(Vimg>=threshold)]=255
-    img=np.reshape(Vimg,(img.shape[0],img.shape[1]))
-    return img
-    
+import cv2 as cv2
 def removeLines(binarized,line_height):
     horizontal_projection_parameter=(35/100)
     # Construct horizontal projection
@@ -49,3 +41,18 @@ def removeLines(binarized,line_height):
         binarized[peak,sum_row>(2*line_height+1)]=255
     #show_images([binarized])
     return binarized
+
+# def removeLinesErod(binarized):
+#     orig_img=binarized.copy()
+#     binarized[binarized==255]=1
+#     binarized=1-binarized
+#     rows = binarized.shape[0]
+#     verticalsize = rows// 25
+#     # Create structure element for extracting vertical lines through morphology operations
+#     verticalStructure = cv2.getStructuringElement(cv2.MORPH_RECT, (1, verticalsize))
+#     # Apply morphology operations
+#     binarized = cv2.erode(binarized, verticalStructure)
+#     show_images([binarized])
+#     binarized = cv2.dilate(binarized, verticalStructure)
+#     # Show extracted vertical lines
+#     show_images([1-binarized])

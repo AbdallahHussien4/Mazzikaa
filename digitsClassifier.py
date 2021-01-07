@@ -16,11 +16,11 @@ target_img_size = (32, 32)
 #untrained=KNeighborsClassifier(n_neighbors=7)
 #untrained=MLPClassifier(solver='sgd', random_state=random_seed, hidden_layer_sizes=(500,), max_iter=200, verbose=1)
 untrained=svm.LinearSVC(random_state=random_seed)
-def extract_raw_pixels(img):
-    #img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img=cv2.resize(img,target_img_size)
-    img=img.flatten()
-    return img
+# def extract_raw_pixels(img):
+#     #img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+#     img=cv2.resize(img,target_img_size)
+#     img=img.flatten()
+#     return img
 
 def extract_hog_features(img):
     img = cv2.resize(img, target_img_size)
