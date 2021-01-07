@@ -22,6 +22,12 @@ class Note:
             Type = 'Half'
         elif self.duration == 4:
             Type = 'Quarter'
+        elif self.duration == 8:
+            Type = 'Eigth'
+        elif self.duration == 16:
+            Type = 'Sixteenth'
+        elif self.duration == 32:
+            Type = 'Thirty Second'
         string = 'X: ' + str(self.xPosition) + '  '
         string += 'Y: ' + str(self.yPosition) + '  '
         string += 'Notation: ' + self.notation + self.accidental + '/' + str(self.duration) + '  '
