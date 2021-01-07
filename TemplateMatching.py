@@ -139,9 +139,14 @@ def matchNotes(binary, ws):
         xCenters.append((Xmax - Xmin) / 2 + Xmin)
         x=int((Xmax - Xmin) / 2 + Xmin)
         yCenters.append((Ymax - Ymin) / 2 + Ymin)
+        print(Xmin)
         sharp = matchSharp(binary[:,x-int(ws*HorizontalWhiteSpaceRatio.SHARP.value)-ws:x],ws)
         DoubleSharp = matchDoubleSharp(binary[:,x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_SHARP.value)-ws:x],ws)
         Flat = matchFlat(binary[:,x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAT.value)-ws:x],ws)
+        Flag1 = matchFlags(binary[:,x:x+int(ws*HorizontalWhiteSpaceRatio.FLAG.value)+ws],ws,1)
+        Flag2 = matchFlags(binary[:,x:x+int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAG.value)+ws],ws,2)
+        Flag3 = matchFlags(binary[:,x:x+int(ws*HorizontalWhiteSpaceRatio.TRIPLE_FLAG.value)+ws],ws,3)
+
         if sharp ==1:
             print("Sharp")
         elif DoubleSharp==1:
@@ -150,13 +155,19 @@ def matchNotes(binary, ws):
             print("Double Flat")      
         elif Flat==1:
             print("Flat")
+        elif Flag3==1:
+            print("Triple Flag")
+        elif Flag2==1:
+            print("Double Flag")
+        elif Flag1==1:
+            print("Single Flag")            
         else:
             print("No")    
                   
     for x in xCenters:
         x=int(x)
         #print(x)
-        result[:,x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAT.value)-ws:x]=255 
+        result[:,x:x+int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAT.value)+ws]=255 
     new=result*binary    
     #print(xCenters, yCenters)
     #print(xCenters)
@@ -450,13 +461,13 @@ def matchFlags(binary, ws, numFlags=1):
     if ws % 2 == 0:
         ws += 1
     result = np.zeros_like(binary, dtype=np.uint8)
-    element = cv2.getStructuringElement(
-        cv2.MORPH_ELLIPSE, (ws, ws))
+    element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, flags, 70, 140, flagMatchingThresh)[0]
-    #print(locations)
+    # print(locations)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j]+ int(ws / 2)] = 1
+    # print(result)        
     result = binary_dilation(result, selem=element)
     contours = find_contours(result, 0.8)
     xCenters = []
@@ -473,4 +484,7 @@ def matchFlags(binary, ws, numFlags=1):
     #binary[binary == 255] = 1
     #result2 = np.bitwise_or(binary, result)
     #show_images([result2])
-    show_images([result])
+    # show_images([result])
+    if(len(xCenters)>0):
+        return 1
+    return 0 

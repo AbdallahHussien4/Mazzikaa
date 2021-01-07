@@ -18,7 +18,7 @@ def normalizeImage(img):
         return np.uint8(img * 255)
     return img
 
-img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\05.PNG', 0)
+img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\01.PNG', 0)
 img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
 # eighth = []
 # for i in eighth_flag_imgs:
@@ -38,7 +38,7 @@ retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
 sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
 removeLines(binary, sls[1])
-print(ws*2.5)
+# print(ws*2.5)
 matchNotes(binary,ws)
 
 # run_experiment('raw')
