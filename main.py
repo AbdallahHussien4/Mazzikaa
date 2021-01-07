@@ -56,23 +56,24 @@ from skimage.morphology import skeletonize
 # print(len(xCenters))
 # show_images([binary, result])
 
-img = io.imread('imgs/score_10.JPG', as_gray=True)
-#img = io.imread('PublicTestCases/test-set-scanned/test-cases/10.PNG', as_gray=True)
+#img = io.imread('imgs/score_10.JPG', as_gray=True)
+img = io.imread('PublicTestCases/test-set-scanned/test-cases/02.PNG', as_gray=True)
 img = normalizeImage(img)
 retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-show_images([binary])
+#show_images([binary])
 staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary, vertical=True)
 #segmented = SegmentWithMorph(binary,staff_thick=staffLinesThicc,white_spce=whitespaceLen)
-segmented=segmentwithmorph(binary,white_spce=whitespaceLen,line_thick=staffLinesThicc)
-show_images(segmented)
-for segment in segmented:
-    NoLines=removeLines(segment, staffLinesThicc)
-    show_images([NoLines])
-    #121 178
-    detectDigits(NoLines[:,150:170],segment,whitespaceLen,staffLinesThicc,150,170)
+#segmented=segmentwithmorph(binary,white_spce=whitespaceLen,line_thick=staffLinesThicc)
+#show_images(segmented)
+# for segment in segmented:
+#     NoLines=removeLines(segment, staffLinesThicc)
+#     show_images([NoLines])
+#     #121 178
+#     detectDigits(NoLines[:,150:170],segment,whitespaceLen,staffLinesThicc,150,170)
 
-img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\02.PNG', 0)
-img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
+img = cv2.imread('PublicTestCases/test-set-scanned/test-cases/10.PNG', 0)
+show_images([img])
+#img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
 # eighth = []
 # for i in eighth_flag_imgs:
 #     image = normalizeImage(i)
@@ -92,7 +93,8 @@ sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
 sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
 removeLines(binary, sls[1])
 print(ws*2.5)
-matchNotes(binary,ws)
+#matchNotes(binary,ws)
+matchClefs(binary, ws)
 
 # run_experiment('raw')
 # img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)
