@@ -9,40 +9,17 @@ from RemoveLines import *
 from detection import quarterEighthNoteDetection, fillHalfNoteHeads
 from digitsDetection import *
 from digitsClassifier import *
-import cv2 as cv2
-from TemplateMatching import match
+from cv2 import cv2
+from TemplateMatching import match, matchNotes, matchAccidentals, matchFlags
+from skimage.morphology import skeletonize
 
-flag_paths = [  "flags/eighth_flag_1.jpg",
-                "flags/eighth_flag_2.jpg",
-                "flags/eighth_flag_3.jpg",
-                "flags/eighth_flag_4.jpg",
-                "flags/eighth_flag_5.jpg",
-                "flags/eighth_flag_6.jpg"]
-
-sharp_paths = [
-    "imgs/sharp-line.png", 
-    "imgs/sharp-space.png"
-] 
-
-quarters = ["quarter.png", "solid-note.png"]
 def normalizeImage(img):
     if(img.max() <= 1):
         return np.uint8(img * 255)
     return img
 
-eighth_flag_imgs = [ io.imread(flag, as_gray=True) for flag in flag_paths]
-#img = io.imread('imgs/score_10.JPG', as_gray=True)
-img = io.imread('PublicTestCases/test-set-scanned/test-cases/02.PNG', as_gray=True)
-img = normalizeImage(img)
-retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-show_images([binary])
-staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary, vertical=True)
-segmented = SegmentWithMorph(binary,staff_thick=staffLinesThicc,white_spce=whitespaceLen)
-show_images(segmented)
-for segment in segmented:
-    NoLines=removeLines(segment, staffLinesThicc)
-    show_images([NoLines])
-    detectDigits(NoLines[:,121:178],segment,whitespaceLen,staffLinesThicc,121,178)
+#eighth_flag_imgs = [ io.imread(flag, as_gray=True) for flag in flag_paths]
+
 
 # eighth = []
 # for i in eighth_flag_imgs:
@@ -81,6 +58,47 @@ for segment in segmented:
 # print(xCenters, yCenters)
 # print(len(xCenters))
 # show_images([binary, result])
+#img = io.imread('imgs/score_10.JPG', as_gray=True)
+img = io.imread('PublicTestCases/test-set-scanned/test-cases/02.PNG', as_gray=True)
+img = normalizeImage(img)
+retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+show_images([binary])
+staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary, vertical=True)
+segmented = SegmentWithMorph(binary,staff_thick=staffLinesThicc,white_spce=whitespaceLen)
+show_images(segmented)
+for segment in segmented:
+    NoLines=removeLines(segment, staffLinesThicc)
+    show_images([NoLines])
+    detectDigits(NoLines[:,121:178],segment,whitespaceLen,staffLinesThicc,121,178)
+
+img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\02.PNG', 0)
+img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
+# eighth = []
+# for i in eighth_flag_imgs:
+#     image = normalizeImage(i)
+#     retval, image = cv2.threshold(image, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+#     eighth.append(image)
+# compare = io.imread('quarter.png', as_gray=True)
+# compare = normalizeImage(compare)
+# binary_compare = AdaptiveThresholding(compare)
+# for_numer=cv2.imread('imgs/m1.png')
+#for_numer = normalizeImage(for_numer)
+#for_numer = AdaptiveThresholding(for_numer)
+# show_images([img])
+img = normalizeImage(img)
+retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+#binary = AdaptiveThresholding(img)
+sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
+sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
+removeLines(binary, sls[1])
+for i in range(1, 4):
+    matchFlags(binary, ws, i)
+
+# run_experiment('raw')
+# img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)
+# img_three=img = cv2.imread("numbers/3_1.png",cv2.IMREAD_GRAYSCALE)
+# img_three_again=img = cv2.imread("3.png",cv2.IMREAD_GRAYSCALE)
+# print(runTest(img_three_again))
 
 # #show_images([binary])
 # # staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary, vertical=True)
