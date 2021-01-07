@@ -47,9 +47,7 @@ for i in range(1, 4):
 # img_three_again=img = cv2.imread("3.png",cv2.IMREAD_GRAYSCALE)
 # print(runTest(img_three_again))
 
-# print(runTest(img_three))
-# print(runTest(img_seven))
-# show_images([binary])
+#show_images([binary])
 # staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary, vertical=True)
 # sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
 # sl = int((sls[0] + sls[1]) / 2)

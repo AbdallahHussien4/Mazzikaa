@@ -1,4 +1,4 @@
-from cv2 import cv2
+import cv2 as cv2
 import numpy as np
 import skimage.io as io
 from RemoveLines import removeLines
