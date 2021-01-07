@@ -10,34 +10,21 @@ from detection import quarterEighthNoteDetection, fillHalfNoteHeads
 from digitsDetection import *
 from digitsClassifier import *
 from cv2 import cv2
-from TemplateMatching import match
+from TemplateMatching import match, matchNotes, matchAccidentals, matchFlags
+from skimage.morphology import skeletonize
 
-flag_paths = [  "flags/eighth_flag_1.jpg",
-                "flags/eighth_flag_2.jpg",
-                "flags/eighth_flag_3.jpg",
-                "flags/eighth_flag_4.jpg",
-                "flags/eighth_flag_5.jpg",
-                "flags/eighth_flag_6.jpg"]
-
-sharp_paths = [
-    "imgs/sharp-line.png", 
-    "imgs/sharp-space.png"
-] 
-
-quarters = ["quarter.png", "solid-note.png"]
 def normalizeImage(img):
     if(img.max() <= 1):
         return np.uint8(img * 255)
     return img
 
-eighth_flag_imgs = [ io.imread(flag, as_gray=True) for flag in flag_paths]
-
-img = io.imread('imgs/score_10.jpg', as_gray=True)
-eighth = []
-for i in eighth_flag_imgs:
-    image = normalizeImage(i)
-    retval, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    eighth.append(image)
+img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\02.PNG', 0)
+img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
+# eighth = []
+# for i in eighth_flag_imgs:
+#     image = normalizeImage(i)
+#     retval, image = cv2.threshold(image, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+#     eighth.append(image)
 # compare = io.imread('quarter.png', as_gray=True)
 # compare = normalizeImage(compare)
 # binary_compare = AdaptiveThresholding(compare)
@@ -48,28 +35,12 @@ for i in eighth_flag_imgs:
 img = normalizeImage(img)
 retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 #binary = AdaptiveThresholding(img)
-result = np.zeros_like(binary)
-element = cv2.getStructuringElement(
-    cv2.MORPH_ELLIPSE, (15, 15))
-locations = match(binary, eighth, 50, 150, 0.65)[0]
-print(locations)
-for i in locations:
-    for j in range(len(i[0])):
-        result[i[0][j], i[1][j]] = 1
-result = binary_dilation(result, selem=element)
-contours = find_contours(result, 0.8)
-xCenters = []
-yCenters = []
-for contour in contours:
-    Xmin = int(min(contour[:, 1]))
-    Xmax = int(max(contour[:, 1]))
-    Ymin = int(min(contour[:, 0]))
-    Ymax = int(max(contour[:, 0]))
-    xCenters.append((Xmax - Xmin) / 2 + Xmin)
-    yCenters.append((Ymax - Ymin) / 2 + Ymin)
-print(xCenters, yCenters)
-print(len(xCenters))
-show_images([binary, result])
+sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
+sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
+removeLines(binary, sls[1])
+for i in range(1, 4):
+    matchFlags(binary, ws, i)
+
 # run_experiment('raw')
 # img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)
 # img_three=img = cv2.imread("numbers/3_1.png",cv2.IMREAD_GRAYSCALE)
