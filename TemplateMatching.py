@@ -7,6 +7,32 @@ from StaffLines import getSLsThickness_Whitespaces, get_StartingEnding_StaffLine
 from commonfunctions import show_images
 from skimage.measure import find_contours
 from enum import Enum
+from Note import Note
+from detection import getShortestDistance
+
+positionNotationDict = {
+    0: 'b3',
+    1: 'a3', 
+    2: 'g3', 
+    3: 'f3',
+    4: 'e3', 
+    5: 'd3', 
+    6: 'c3', 
+    7: 'b2', 
+    8: 'a2', 
+    9: 'g2',
+    10: 'f2', 
+    11: 'e2', 
+    12: 'd2', 
+    13: 'c2', 
+    14: 'b', 
+    15: 'a', 
+    16: 'g', 
+    17: 'f', 
+    18: 'e', 
+    19: 'd', 
+    20: 'c'
+}
 
 clefPaths=["clefs/treble_1.jpg","clefs/treble_2.jpg"]
 quarterPaths = ["Notes/quarter.jpg"]
@@ -19,7 +45,9 @@ flagPaths = ["Flags/flag.jpg"]
 doubleFlagPaths = ["Flags/doubleflag.jpg"]
 tripleFlagPaths = ["Flags/tripleflag.jpg"]
 
+
 class HorizontalWhiteSpaceRatio(Enum):
+
     SHARP = 1
     DOUBLE_SHARP = 1.1
     FLAT = 1
@@ -29,7 +57,7 @@ class HorizontalWhiteSpaceRatio(Enum):
     TRIPLE_FLAG = 1.1
     CLEF=2.7
 
-class WhiteSpaceRatio(Enum):
+class VerticalWhiteSpaceRatio(Enum):
     CLEF=8
     QUARTER_NOTE = 1
     HALF_NOTE = 1
@@ -55,11 +83,11 @@ class MatchingThreshold(Enum):
     DOUBLE_FLAG = 0.7
     TRIPLE_FLAG = 0.7
 
-def normalizeImage(img):
-        if(img.max() <= 1):
-            return np.uint8(img * 255)
-        return img
 
+def normalizeImage(img):
+    if(img.max() <= 1):
+        return np.uint8(img * 255)
+    return img
 
 def match(img, templates, start_percent=50, stop_percent=150, threshold=0.8):
     best_location_count = -1
@@ -95,13 +123,16 @@ def match(img, templates, start_percent=50, stop_percent=150, threshold=0.8):
 ##########                                                                   #############
 ##########                                                                   #############
 ##########                                                                   #############
-##########                          NOTES                                    #############
+##########                              NOTES                                #############
 ##########                                                                   #############
 ##########                                                                   #############
 ##########                                                                   #############
 ##########################################################################################
 
-def matchNotes(binary, ws):
+def matchNotes(binary, ws, linesPositions):
+
+
+    Notes = []
 
 ######################################################################
 #                                                                    #
@@ -114,7 +145,7 @@ def matchNotes(binary, ws):
     
     quarters = []
     for i in quarter_imgs:
-        scaleFactor = i.shape[0]/(ws * WhiteSpaceRatio.QUARTER_NOTE.value)
+        scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.QUARTER_NOTE.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
@@ -131,43 +162,51 @@ def matchNotes(binary, ws):
             result[i[0][j] + int(ws / 2), i[1][j]+ int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
     contours = find_contours(result, 0.8)
-    xCenters = []
-    yCenters = []
+
     for contour in contours:
+
         Xmin = int(min(contour[:, 1]))
         Xmax = int(max(contour[:, 1]))
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
-        xCenters.append((Xmax - Xmin) / 2 + Xmin)
-        x=int((Xmax - Xmin) / 2 + Xmin)
-        yCenters.append((Ymax - Ymin) / 2 + Ymin)
+        x = int((Xmax - Xmin) / 2 + Xmin)
+        y = int((Ymax - Ymin) / 2 + Ymin)
+        pos = getShortestDistance(y, linesPositions)
+        
+        #TODO Don't check all rows in that area, instead, bound it with vertical WS ratio 
         sharp = matchSharp(binary[:,x-int(ws*HorizontalWhiteSpaceRatio.SHARP.value)-ws:x],ws)
         DoubleSharp = matchDoubleSharp(binary[:,x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_SHARP.value)-ws:x],ws)
         Flat = matchFlat(binary[:,x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAT.value)-ws:x],ws)
+        Flag1 = matchFlags(binary[:,x:x+int(ws*HorizontalWhiteSpaceRatio.FLAG.value)+ws],ws,1)
+        Flag2 = matchFlags(binary[:,x:x+int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAG.value)+ws],ws,2)
+        Flag3 = matchFlags(binary[:,x:x+int(ws*HorizontalWhiteSpaceRatio.TRIPLE_FLAG.value)+ws],ws,3)
+        note = Note(x, y, positionNotationDict[pos], 4)
+        
         if sharp ==1:
-            print("Sharp")
+            note.accidental = '#'
         elif DoubleSharp==1:
-            print("Double Sharp")
+            note.accidental = '##'
         elif Flat==2:
-            print("Double Flat")      
+            note.accidental = '&&'
         elif Flat==1:
-            print("Flat")
-        else:
-            print("No")    
-                  
-    for x in xCenters:
-        x=int(x)
-        #print(x)
-        result[:,x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAT.value)-ws:x]=255 
-    new=result*binary    
+            note.accidental = '&'
+          
+        if Flag3==1:
+            note.duration *= 8
+        elif Flag2==1:
+            note.duration *= 4
+        elif Flag1==1:
+            note.duration *= 2       
+           
+        Notes.append(note)
+                   
     #print(xCenters, yCenters)
     #print(xCenters)
     #binary[binary == 255] = 1
     #result2 = np.bitwise_or(binary, result)
     #show_images([result2])
     #TODO build an array of quarter notes containing their positions
-    show_images([result, binary,new])
-    
+    #show_images([result, binary])
 
 
 ######################################################################
@@ -180,7 +219,7 @@ def matchNotes(binary, ws):
     
     halfs = []
     for i in half_imgs:
-        scaleFactor = i.shape[0]/(ws * WhiteSpaceRatio.HALF_NOTE.value)
+        scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.HALF_NOTE.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
@@ -190,7 +229,7 @@ def matchNotes(binary, ws):
     element = cv2.getStructuringElement(
         cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, halfs, 70, 140, MatchingThreshold.HALF_NOTE.value)[0]
-    print(locations)
+    #print(locations)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j]+ int(ws / 2)] = 1
@@ -205,12 +244,16 @@ def matchNotes(binary, ws):
         Ymax = int(max(contour[:, 0]))
         xCenters.append((Xmax - Xmin) / 2 + Xmin)
         yCenters.append((Ymax - Ymin) / 2 + Ymin)
+    
+    for i in range(len(xCenters)):
+        pos = getShortestDistance(yCenters[i], linesPositions)
+        Notes.append(Note(xCenters[i], yCenters[i], positionNotationDict[pos], 2))
     # print(xCenters, yCenters)
     # print(len(xCenters))
     #binary[binary == 255] = 1
     #result2 = np.bitwise_or(binary, result)
     #TODO build an array of half notes containing their positions
-    show_images([result, binary])
+    #show_images([result, binary])
 
 
 ######################################################################
@@ -223,7 +266,7 @@ def matchNotes(binary, ws):
     
     wholes = []
     for i in whole_imgs:
-        scaleFactor = i.shape[0]/(ws * WhiteSpaceRatio.WHOLE_NOTE.value)
+        scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.WHOLE_NOTE.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
@@ -233,7 +276,7 @@ def matchNotes(binary, ws):
     element = cv2.getStructuringElement(
         cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, wholes, 70, 140, MatchingThreshold.WHOLE_NOTE.value)[0]
-    print(locations)
+    #print(locations)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j]+ int(ws / 2)] = 1
@@ -248,12 +291,20 @@ def matchNotes(binary, ws):
         Ymax = int(max(contour[:, 0]))
         xCenters.append((Xmax - Xmin) / 2 + Xmin)
         yCenters.append((Ymax - Ymin) / 2 + Ymin)
+    
+    for i in range(len(xCenters)):
+        pos = getShortestDistance(yCenters[i], linesPositions)
+        Notes.append(Note(xCenters[i], yCenters[i], positionNotationDict[pos], 1))
     # print(xCenters, yCenters)
     # print(len(xCenters))
     #binary[binary == 255] = 1
     #result2 = np.bitwise_or(binary, result)
-    show_images([result, binary])
+    #show_images([result, binary])
     #TODO build an array of half notes containing their positions
+
+    Notes.sort(key=lambda x: x.xPosition)
+
+    return Notes
 
 
 ##############################################################################################
@@ -269,7 +320,7 @@ def matchClefs(binary,ws):
     clef_imgs = [ cv2.imread(clef, 0) for clef in clefPaths]
     clefs=[]
     for i in clef_imgs:
-        scaleFactor = i.shape[0]/(ws * WhiteSpaceRatio.CLEF.value)
+        scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.CLEF.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
@@ -290,7 +341,7 @@ def matchClefs(binary,ws):
         Ymax = int(max(contour[:, 0]))
         xCenters=int(((Xmax - Xmin) / 2 + Xmin))
         yCenters=int(((Ymax - Ymin) / 2 + Ymin))
-        binary[yCenters:yCenters+int((WhiteSpaceRatio.CLEF.value*ws)),xCenters-ws:xCenters+int((HorizontalWhiteSpaceRatio.CLEF.value*ws))]=255
+        binary[yCenters:yCenters+int((VerticalWhiteSpaceRatio.CLEF.value*ws)),xCenters-ws:xCenters+int((HorizontalWhiteSpaceRatio.CLEF.value*ws))]=255
     
     show_images([result, binary])
 
@@ -316,7 +367,7 @@ def matchSharp(binary, ws):
     
     sharps = []
     for i in sharp_imgs:
-        scaleFactor = i.shape[0]/(ws * WhiteSpaceRatio.SHARP.value)
+        scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.SHARP.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
         #print(int(cols / scaleFactor)+ws)
@@ -364,10 +415,9 @@ def matchFlat(binary,ws):
     
     flats = []
     for i in flat_imgs:
-        scaleFactor = i.shape[0]/(ws * WhiteSpaceRatio.FLAT.value)
+        scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.FLAT.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
-        #print(int(cols / scaleFactor+ws))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         flats.append(i)
 
@@ -416,10 +466,9 @@ def matchDoubleSharp(binary,ws):
     
     doubleSharps = []
     for i in doubleSharp_imgs:
-        scaleFactor = i.shape[0]/(ws * WhiteSpaceRatio.DOUBLE_SHARP.value)
+        scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.DOUBLE_SHARP.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
-        #print(int(cols / scaleFactor+ws))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         doubleSharps.append(i)
         
@@ -427,7 +476,7 @@ def matchDoubleSharp(binary,ws):
     element = cv2.getStructuringElement(
         cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, doubleSharps, 70, 140, MatchingThreshold.DOUBLE_SHARP.value)[0]
-   # print(locations)
+    #print(locations)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j]+ int(ws / 2)] = 1
@@ -465,24 +514,25 @@ def matchDoubleSharp(binary,ws):
 
 def matchFlags(binary, ws, numFlags=1):
 
+    
     if numFlags == 1:
         flagMatchingThresh = MatchingThreshold.FLAG.value
-        flagWhiteSpaceRatio = WhiteSpaceRatio.FLAG.value
+        flagVerticalWhiteSpaceRatio = VerticalWhiteSpaceRatio.FLAG.value
         mflagPaths = flagPaths
     elif numFlags == 2:
         flagMatchingThresh = MatchingThreshold.DOUBLE_FLAG.value
-        flagWhiteSpaceRatio = WhiteSpaceRatio.DOUBLE_FLAG.value
+        flagVerticalWhiteSpaceRatio = VerticalWhiteSpaceRatio.DOUBLE_FLAG.value
         mflagPaths = doubleFlagPaths
     else:
         flagMatchingThresh = MatchingThreshold.TRIPLE_FLAG.value
-        flagWhiteSpaceRatio = WhiteSpaceRatio.TRIPLE_FLAG.value
+        flagVerticalWhiteSpaceRatio = VerticalWhiteSpaceRatio.TRIPLE_FLAG.value
         mflagPaths = tripleFlagPaths
 
     flag_imgs = [ cv2.imread(flag, 0) for flag in mflagPaths]
     
     flags = []
     for i in flag_imgs:
-        scaleFactor = i.shape[0]/(ws * flagWhiteSpaceRatio)
+        scaleFactor = i.shape[0]/(ws * flagVerticalWhiteSpaceRatio)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
@@ -490,27 +540,24 @@ def matchFlags(binary, ws, numFlags=1):
     if ws % 2 == 0:
         ws += 1
     result = np.zeros_like(binary, dtype=np.uint8)
-    element = cv2.getStructuringElement(
-        cv2.MORPH_ELLIPSE, (ws, ws))
+    element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, flags, 70, 140, flagMatchingThresh)[0]
-    #print(locations)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j]+ int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
     contours = find_contours(result, 0.8)
-    xCenters = []
-    yCenters = []
     for contour in contours:
         Xmin = int(min(contour[:, 1]))
         Xmax = int(max(contour[:, 1]))
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
-        xCenters.append((Xmax - Xmin) / 2 + Xmin)
-        yCenters.append((Ymax - Ymin) / 2 + Ymin)
     # print(xCenters, yCenters)
     # print(len(xCenters))
     #binary[binary == 255] = 1
     #result2 = np.bitwise_or(binary, result)
     #show_images([result2])
-    show_images([result])
+    # show_images([result])
+    if(len(contours)>0):
+        return 1
+    return 0 

@@ -6,7 +6,7 @@ from commonfunctions import show_images
 
 def get_StartingEnding_StaffLinePosition(image, whitespaceLen):
 
-    element = np.ones((1, int(whitespaceLen*2)))
+    element = np.ones((1, int(whitespaceLen * 2)))
     opened = binary_opening(255 - image, selem=element)
     height, width = opened.shape
     starting = []
@@ -15,7 +15,7 @@ def get_StartingEnding_StaffLinePosition(image, whitespaceLen):
         start = -1
         end = -1
         for row in range(height):
-            if opened[row, col] == 1:
+            if opened[row, col] > 0:
                 if start == -1:
                     start = row
                 end = row

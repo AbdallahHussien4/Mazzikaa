@@ -11,7 +11,6 @@ from digitsDetection import *
 from digitsClassifier import *
 import cv2 as cv2
 from TemplateMatching import *
-
 from skimage.morphology import skeletonize
 
 
@@ -72,7 +71,9 @@ staffLinesThicc, whitespaceLen = getSLsThickness_Whitespaces(binary, vertical=Tr
 #     detectDigits(NoLines[:,150:170],segment,whitespaceLen,staffLinesThicc,150,170)
 
 img = cv2.imread('PublicTestCases/test-set-scanned/test-cases/10.PNG', 0)
-show_images([img])
+#img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
+
+img = cv2.imread('PublicTestCases/test-set-scanned/test-cases/10.PNG', 0)
 #img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
 # eighth = []
 # for i in eighth_flag_imgs:
@@ -91,10 +92,13 @@ retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 #binary = AdaptiveThresholding(img)
 sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
 sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
+firstLine, lastLine = get_StartingEnding_StaffLinePosition(binary, ws)
+linesPositions = generateLinesArray(sl, ws, firstLine, lastLine)
 removeLines(binary, sls[1])
 print(ws*2.5)
 #matchNotes(binary,ws)
 matchClefs(binary, ws)
+
 
 # run_experiment('raw')
 # img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)
