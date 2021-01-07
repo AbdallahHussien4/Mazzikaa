@@ -10,13 +10,10 @@ from detection import quarterEighthNoteDetection, fillHalfNoteHeads
 from digitsDetection import *
 from digitsClassifier import *
 import cv2 as cv2
-from TemplateMatching import match, matchNotes, matchAccidentals, matchFlags
+from TemplateMatching import *
+
 from skimage.morphology import skeletonize
 
-def normalizeImage(img):
-    if(img.max() <= 1):
-        return np.uint8(img * 255)
-    return img
 
 #eighth_flag_imgs = [ io.imread(flag, as_gray=True) for flag in flag_paths]
 
@@ -94,8 +91,8 @@ retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
 sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
 removeLines(binary, sls[1])
-for i in range(1, 4):
-    matchFlags(binary, ws, i)
+print(ws*2.5)
+matchNotes(binary,ws)
 
 # run_experiment('raw')
 # img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)
