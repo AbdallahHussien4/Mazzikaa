@@ -7,6 +7,7 @@ class Note:
     notation: str
     duration: int
     accidental: str
+    numBeams: int
 
     def __init__(self, x, y, notation, dur, acc=''):
         self.xPosition = x
@@ -14,6 +15,7 @@ class Note:
         self.notation = notation
         self.duration = dur
         self.accidental = acc
+        self.numBeams = 0
 
     def __str__(self):
         if self.duration == 1:
