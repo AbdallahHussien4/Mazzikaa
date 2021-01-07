@@ -4,7 +4,7 @@ from skimage.feature import match_template
 from commonfunctions import show_images, convolve2d
 from skimage.measure import find_contours
 from skimage.morphology import binary_dilation, binary_closing
-import cv2 as cv2
+from cv2 import cv2
 import skimage.io as io
 from Preprocessing import AdaptiveThresholding
 
@@ -56,7 +56,7 @@ def matchNoteHead(img, dim):
 
     matches = []
     element = cv2.getStructuringElement(
-        cv2.MORPH_ELLIPSE, (dim, dim))
+        cv2.MORPH_ELLIPSE, (3, 3))
 
     im3 = binary_dilation(im3, selem=element)
     contours = find_contours(im3, 0.8)
@@ -64,7 +64,7 @@ def matchNoteHead(img, dim):
     for contour in contours:
         Ymin = min(contour[:, 0])
         Ymax = max(contour[:, 0])
-        matches.append(int((Ymax - Ymin) / 2 + Ymin))
+        matches.append(int((Ymax + Ymin) / 2))
 
     show_images([im3])
     print(matches)

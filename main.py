@@ -31,6 +31,8 @@ segmented = segmentwithmorph(binary, white_spce=ws, line_thick=sl)
 for seg in segmented:
     firstLine, lastLine = get_StartingEnding_StaffLinePosition(seg, ws)
     linesPositions = generateLinesArray(sl, ws, firstLine, lastLine)
+    #quarterEighthNoteDetection(seg, linesPositions, (ws, ws))
+    #halfNoteDetection(seg, linesPositions, (ws, ws))
     removed = removeLines(seg, sls[1])
     Notes = matchNotes(removed, sl, ws, linesPositions)
     for i in Notes:

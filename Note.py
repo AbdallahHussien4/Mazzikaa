@@ -30,6 +30,8 @@ class Note:
             Type = 'Sixteenth'
         elif self.duration == 32:
             Type = 'Thirty Second'
+        else:
+            Type = 'LOL'
         string = 'X: ' + str(self.xPosition) + '  '
         string += 'Y: ' + str(self.yPosition) + '  '
         string += 'Notation: ' + self.notation + self.accidental + '/' + str(self.duration) + '  '

@@ -37,7 +37,7 @@ positionNotationDict = {
 clefPaths = ["clefs/treble_1.jpg", "clefs/treble_2.jpg"]
 quarterPaths = ["Notes/quarter.jpg"]
 halfPaths = ["Notes/half1.jpg", "Notes/half2.jpg"]
-wholePaths = ["Notes/whole.jpg"]
+wholePaths = ["Notes/whole.jpg", "Notes/whole2.jpg", "Notes/whole3.jpg"]
 sharpPaths = ["Accidentals/sharp.jpg"]
 flatPaths = ["Accidentals/flat.jpg"]
 doubleSharpPaths = ["Accidentals/doublesharp.jpg"]
@@ -61,7 +61,7 @@ class HorizontalWhiteSpaceRatio(Enum):
 class StaffLinesRatio(Enum):
 
     BEAMS_lOWER = 3
-    BEAMS_UPPER = 8
+    BEAMS_UPPER = 7
 
 
 class VerticalWhiteSpaceRatio(Enum):
@@ -81,8 +81,8 @@ class VerticalWhiteSpaceRatio(Enum):
 class MatchingThreshold(Enum):
     CLEF = 0.4
     QUARTER_NOTE = 0.7
-    HALF_NOTE = 0.7
-    WHOLE_NOTE = 0.7
+    HALF_NOTE = 0.6
+    WHOLE_NOTE = 0.65
     SHARP = 0.7
     DOUBLE_SHARP = 0.7
     FLAT = 0.7
@@ -288,7 +288,7 @@ def matchNotes(binary, sl, ws, linesPositions):
         yCenter = (Ymax + Ymin) / 2
         pos = getShortestDistance(yCenter, linesPositions)
         Notes.append(Note(xCenter, yCenter,
-                          positionNotationDict[pos], 2))
+                          positionNotationDict[pos], 1))
 
     Notes.sort(key=lambda x: x.xPosition)
 
@@ -302,6 +302,7 @@ def matchNotes(binary, sl, ws, linesPositions):
         if Notes[i].duration == 4 and Notes[i + 1].duration == 4:
             col = (Notes[i].xPosition + Notes[i + 1].xPosition) / 2
             encoded = encodeList(binary[:, int(col)])
+            print(encoded)
             for x, y in encoded:
                 if y == 0:
                     if sl * StaffLinesRatio.BEAMS_lOWER.value < x < sl * StaffLinesRatio.BEAMS_UPPER.value:
