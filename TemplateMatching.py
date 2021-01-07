@@ -162,6 +162,7 @@ def matchNotes(binary, ws, linesPositions):
     contours = find_contours(result, 0.8)
 
     for contour in contours:
+
         Xmin = int(min(contour[:, 1]))
         Xmax = int(max(contour[:, 1]))
         Ymin = int(min(contour[:, 0]))
@@ -169,30 +170,23 @@ def matchNotes(binary, ws, linesPositions):
         x = int((Xmax - Xmin) / 2 + Xmin)
         y = int((Ymax - Ymin) / 2 + Ymin)
         pos = getShortestDistance(y, linesPositions)
-        Notes.append(Note(x, y, positionNotationDict[pos], 4))
         
         #TODO Don't check all rows in that area, instead, bound it with vertical WS ratio 
         sharp = matchSharp(binary[:,x-int(ws*HorizontalWhiteSpaceRatio.SHARP.value)-ws:x],ws)
         DoubleSharp = matchDoubleSharp(binary[:,x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_SHARP.value)-ws:x],ws)
         Flat = matchFlat(binary[:,x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAT.value)-ws:x],ws)
         if sharp ==1:
-            print("Sharp")
+            note = Note(x, y, positionNotationDict[pos], 4, '#')
         elif DoubleSharp==1:
-            print("Double Sharp")
+            note = Note(x, y, positionNotationDict[pos], 4, '##')
         elif Flat==2:
-            print("Double Flat")      
+            note = Note(x, y, positionNotationDict[pos], 4, '&&')   
         elif Flat==1:
-            print("Flat")
+            note = Note(x, y, positionNotationDict[pos], 4, '&')
         else:
-            print("No")    
-        
-    # for x in xCenters:
-    #     x=int(x)
-    #     #print(x)
-    #     result[:,x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAT.value)-ws:x]=255 
-    # new=result*binary    
-    #print(xCenters, yCenters)
-    #print(xCenters)
+            note = Note(x, y, positionNotationDict[pos], 4, '') 
+        Notes.append(note)
+          
     #binary[binary == 255] = 1
     #result2 = np.bitwise_or(binary, result)
     #show_images([result2])
@@ -425,7 +419,6 @@ def matchDoubleSharp(binary,ws):
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
         #print(int(cols / scaleFactor+ws))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
-        print('DSharp: ', (cols / scaleFactor) / ws)
         doubleSharps.append(i)
         
     result = np.zeros_like(binary, dtype=np.uint8)

@@ -10,7 +10,7 @@ from detection import quarterEighthNoteDetection, fillHalfNoteHeads
 # from digitsDetection import *
 # from digitsClassifier import *
 from cv2 import cv2
-from TemplateMatching import *
+from TemplateMatching import matchNotes
 from skimage.morphology import skeletonize
 
 def normalizeImage(img):
@@ -40,9 +40,6 @@ sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
 firstLine, lastLine = get_StartingEnding_StaffLinePosition(binary, ws)
 linesPositions = generateLinesArray(sl, ws, firstLine, lastLine)
 removeLines(binary, sls[1])
-matchAccidentals(binary, ws)
-for i in range(1, 4):
-    matchFlags(binary, ws, i)
 Notes = matchNotes(binary, ws, linesPositions)
 for i in Notes:
     print(i)

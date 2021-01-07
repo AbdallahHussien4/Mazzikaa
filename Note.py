@@ -6,12 +6,14 @@ class Note:
     yPosition: int
     notation: str
     duration: int
+    accidental: str
 
-    def __init__(self, x, y, notation, dur):
+    def __init__(self, x, y, notation, dur, acc=''):
         self.xPosition = x
         self.yPosition = y
         self.notation = notation
         self.duration = dur
+        self.accidental = acc
 
     def __str__(self):
         if self.duration == 1:
@@ -22,7 +24,7 @@ class Note:
             Type = 'Quarter'
         string = 'X: ' + str(self.xPosition) + '  '
         string += 'Y: ' + str(self.yPosition) + '  '
-        string += 'Notation: ' + self.notation + '  '
+        string += 'Notation: ' + self.notation + self.accidental + '/' + str(self.duration) + '  '
         string += 'Type: ' + Type 
 
         return string
