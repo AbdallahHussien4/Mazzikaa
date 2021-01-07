@@ -4,7 +4,8 @@
 #Check that vertical window doesn't exceed image border
 from commonfunctions import *
 import cv2 as cv2
-def removeLines(binarized,line_height):
+def removeLines(image,line_height):
+    binarized = image.copy()
     horizontal_projection_parameter=(35/100)
     # Construct horizontal projection
     horizontal_projection=[]

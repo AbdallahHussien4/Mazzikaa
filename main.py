@@ -19,31 +19,23 @@ def normalizeImage(img):
             return np.uint8(img * 255)
         return img
 
-img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\01.PNG', 0)
+img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\02.PNG', 0)
 img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
-# eighth = []
-# for i in eighth_flag_imgs:
-#     image = normalizeImage(i)
-#     retval, image = cv2.threshold(image, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-#     eighth.append(image)
-# compare = io.imread('quarter.png', as_gray=True)
-# compare = normalizeImage(compare)
-# binary_compare = AdaptiveThresholding(compare)
-# for_numer=cv2.imread('imgs/m1.png')
-#for_numer = normalizeImage(for_numer)
-#for_numer = AdaptiveThresholding(for_numer)
-# show_images([img])
+
 img = normalizeImage(img)
 retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-#binary = AdaptiveThresholding(img)
 sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
 sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
-firstLine, lastLine = get_StartingEnding_StaffLinePosition(binary, ws)
-linesPositions = generateLinesArray(sl, ws, firstLine, lastLine)
-removeLines(binary, sls[1])
-Notes = matchNotes(binary, ws, linesPositions)
-for i in Notes:
-    print(i)
+segmented = segmentwithmorph(binary, white_spce=ws, line_thick=sl)
+
+for seg in segmented:
+    firstLine, lastLine = get_StartingEnding_StaffLinePosition(seg, ws)
+    linesPositions = generateLinesArray(sl, ws, firstLine, lastLine)
+    removed = removeLines(seg, sls[1])
+    Notes = matchNotes(removed, ws, linesPositions)
+    for i in Notes:
+        print(i)
+    show_images([seg])
 # run_experiment('raw')
 # img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)
 # img_three=img = cv2.imread("numbers/3_1.png",cv2.IMREAD_GRAYSCALE)
