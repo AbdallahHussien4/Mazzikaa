@@ -7,16 +7,13 @@ from segmentation import*
 from MakeImgHorizontal import *
 from RemoveLines import *
 from detection import quarterEighthNoteDetection, fillHalfNoteHeads
-# from digitsDetection import *
-# from digitsClassifier import *
-from cv2 import cv2
+from digitsDetection import *
+from digitsClassifier import *
+import cv2 as cv2
 from TemplateMatching import *
+
 from skimage.morphology import skeletonize
 
-def normalizeImage(img):
-    if(img.max() <= 1):
-        return np.uint8(img * 255)
-    return img
 
 img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\01.PNG', 0)
 img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
