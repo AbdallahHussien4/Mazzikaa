@@ -10,7 +10,7 @@ from detection import quarterEighthNoteDetection, fillHalfNoteHeads
 from digitsDetection import *
 from digitsClassifier import *
 from cv2 import cv2
-from TemplateMatching import matchNotes
+from TemplateMatching import matchNotes, matchClefs
 from skimage.morphology import skeletonize
 
 
@@ -19,8 +19,7 @@ def normalizeImage(img):
         return np.uint8(img * 255)
     return img
 
-
-img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\09.PNG', 0)
+img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\02.PNG', 0)
 img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
 
 img = normalizeImage(img)
@@ -33,7 +32,6 @@ for seg in segmented:
     firstLine, lastLine = get_StartingEnding_StaffLinePosition(seg, ws)
     linesPositions = generateLinesArray(sl, ws, firstLine, lastLine)
     removed = removeLines(seg, sls[1])
-    print(sl, ws)
     Notes = matchNotes(removed, sl, ws, linesPositions)
     for i in Notes:
         print(i)

@@ -1,4 +1,4 @@
-from cv2 import cv2
+import cv2 as cv2
 import numpy as np
 import skimage.io as io
 from RemoveLines import removeLines
@@ -34,6 +34,7 @@ positionNotationDict = {
     20: 'c'
 }
 
+clefPaths=["clefs/treble_1.jpg","clefs/treble_2.jpg"]
 quarterPaths = ["Notes/quarter.jpg"]
 halfPaths = ["Notes/half1.jpg", "Notes/half2.jpg"]
 wholePaths = ["Notes/whole.jpg"]
@@ -54,6 +55,7 @@ class HorizontalWhiteSpaceRatio(Enum):
     FLAG = 1
     DOUBLE_FLAG = 1.2
     TRIPLE_FLAG = 1.1
+    CLEF=2.7
 
 class StaffLinesRatio(Enum):
 
@@ -61,7 +63,7 @@ class StaffLinesRatio(Enum):
     BEAMS_UPPER = 8
 
 class VerticalWhiteSpaceRatio(Enum):
-
+    CLEF=8
     QUARTER_NOTE = 1
     HALF_NOTE = 1
     WHOLE_NOTE = 1
@@ -74,7 +76,7 @@ class VerticalWhiteSpaceRatio(Enum):
     TRIPLE_FLAG = 4
 
 class MatchingThreshold(Enum):
-
+    CLEF=0.4
     QUARTER_NOTE = 0.7
     HALF_NOTE = 0.7
     WHOLE_NOTE = 0.7
@@ -330,6 +332,44 @@ def matchNotes(binary, sl, ws, linesPositions):
         note.duration *= 2**note.numBeams
 
     return Notes
+
+##############################################################################################
+#############                                                                   ##############
+#############                                                                   ##############
+#############                                                                   ##############
+#############                          clefs                                    ##############
+#############                                                                   ##############
+#############                                                                   ##############
+#############                                                                   ##############
+##############################################################################################
+def matchClefs(binary,ws):
+    clef_imgs = [ cv2.imread(clef, 0) for clef in clefPaths]
+    clefs=[]
+    for i in clef_imgs:
+        scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.CLEF.value)
+        rows, cols = i.shape
+        i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
+        i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+        clefs.append(i)
+    result = np.zeros_like(binary, dtype=np.uint8)
+    element = cv2.getStructuringElement(
+    cv2.MORPH_ELLIPSE, (ws, ws))
+    locations = match(binary, clefs, 50, 150, MatchingThreshold.CLEF.value)[0]
+    for i in locations:
+        for j in range(len(i[0])):
+            result[i[0][j] + int(ws / 2), i[1][j]+ int(ws / 2)] = 1
+    result = binary_dilation(result, selem=element)
+    contours = find_contours(result, 0.8)
+    for contour in contours:
+        Xmin = int(min(contour[:, 1]))
+        Xmax = int(max(contour[:, 1]))
+        Ymin = int(min(contour[:, 0]))
+        Ymax = int(max(contour[:, 0]))
+        xCenters=int(((Xmax - Xmin) / 2 + Xmin))
+        yCenters=int(((Ymax - Ymin) / 2 + Ymin))
+        binary[yCenters:yCenters+int((VerticalWhiteSpaceRatio.CLEF.value*ws)),xCenters-ws:xCenters+int((HorizontalWhiteSpaceRatio.CLEF.value*ws))]=255
+    
+    show_images([result, binary])
 
 
 ##############################################################################################
