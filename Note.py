@@ -1,5 +1,3 @@
-
-
 class Note:
 
     xPosition: int
@@ -55,6 +53,7 @@ class Note:
 
         string += 'Notation: ' + self.notation + self.accidental + '/' + str(self.duration) + self.numDots + '  '
         string += 'Type: ' + Type 
+        stringg =  self.notation + self.accidental + '/' + str(self.duration) + self.numDots + ' '
 
-        return string
+        return stringg
         

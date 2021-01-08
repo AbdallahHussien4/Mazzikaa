@@ -7,6 +7,7 @@ from segmentation import*
 from MakeImgHorizontal import *
 from RemoveLines import *
 from detection import quarterEighthNoteDetection, fillHalfNoteHeads
+from GenerateOutput import *
 # from digitsDetection import *
 # from digitsClassifier import *
 from cv2 import cv2
@@ -19,7 +20,7 @@ def normalizeImage(img):
         return np.uint8(img * 255)
     return img
 
-img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\02.PNG', 0)
+img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\01.PNG', 0)
 img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
 
 img = normalizeImage(img)
@@ -27,6 +28,7 @@ retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
 sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
 segmented = segmentwithmorph(binary, white_spce=ws, line_thick=sl)
+f = open("testOut.txt", "w")
 
 for seg in segmented:
     firstLine, lastLine = get_StartingEnding_StaffLinePosition(seg, ws)
@@ -35,8 +37,9 @@ for seg in segmented:
     #halfNoteDetection(seg, linesPositions, (ws, ws))
     removed = removeLines(seg, sls[1])
     Notes = matchNotes(removed, sl, ws, linesPositions)
-    for i in Notes:
-        print(i)
+    GenerateOutput(Notes,f)
+    # for i in Notes:
+    #     print(i)
     #show_images([seg])
 # run_experiment('raw')
 # img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)
