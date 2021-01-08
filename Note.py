@@ -41,15 +41,19 @@ class Note:
             Type = 'Thirty Two'
         else:
             Type = 'LOL'
+        self.numDots=self.numDots*'.'    
         string = 'X: ' + str(self.xPosition) + '  '
         string += 'Y: ' + str(self.yPosition) + '  '
+
         if(self.ChordStart==1):
-            self.notation="{"+self.notation+","
+            self.notation="{"+self.notation
+            self.numDots= self.numDots+","
         elif (self.ChordEnd==1):
-            self.notation=self.notation+"}"  
+            self.numDots=self.numDots+"}"  
         elif (self.ChordMid==1):
-            self.notation=self.notation+","      
-        string += 'Notation: ' + self.notation + self.accidental + '/' + str(self.duration) + self.numDots*'.' + '  '
+            self.numDots=self.numDots+","     
+
+        string += 'Notation: ' + self.notation + self.accidental + '/' + str(self.duration) + self.numDots + '  '
         string += 'Type: ' + Type 
 
         return string
