@@ -35,7 +35,7 @@ positionNotationDict = {
 }
 
 clefPaths = ["clefs/treble_1.jpg", "clefs/treble_2.jpg"]
-quarterPaths = ["Notes/quarter.jpg"]
+quarterPaths = ["Notes/quarter.jpg","Notes/quarter2.jpg"]
 halfPaths = ["Notes/half1.jpg", "Notes/half2.jpg"]
 wholePaths = ["Notes/whole.jpg", "Notes/whole2.jpg", "Notes/whole3.jpg"]
 sharpPaths = ["Accidentals/sharp.jpg"]
@@ -160,14 +160,13 @@ def matchNotes(binary, sl, ws, linesPositions):
     if ws % 2 == 0:
         ws += 1
     result = np.zeros_like(binary, dtype=np.uint8)
-    element = cv2.getStructuringElement(
-        cv2.MORPH_ELLIPSE, (ws, ws))
-    locations = match(binary, quarters, 50, 150,
-                      MatchingThreshold.QUARTER_NOTE.value)[0]
+    element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(ws/2), int(ws/2)))
+    locations = match(binary, quarters, 50, 150,MatchingThreshold.QUARTER_NOTE.value)[0]
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
+    show_images([result,binary])
     contours = find_contours(result, 0.8)
 
     for contour in contours:
@@ -302,7 +301,7 @@ def matchNotes(binary, sl, ws, linesPositions):
         if Notes[i].duration == 4 and Notes[i + 1].duration == 4:
             col = (Notes[i].xPosition + Notes[i + 1].xPosition) / 2
             encoded = encodeList(binary[:, int(col)])
-            print(encoded)
+            #print(encoded)
             for x, y in encoded:
                 if y == 0:
                     if sl * StaffLinesRatio.BEAMS_lOWER.value < x < sl * StaffLinesRatio.BEAMS_UPPER.value:
@@ -317,6 +316,14 @@ def matchNotes(binary, sl, ws, linesPositions):
     for note in Notes:
         note.duration *= 2**note.numBeams
 
+    # for i in range(len(Notes) - 1):
+    #     if Notes[i].xPosition == Notes[i+1].xPosition and i+2<len(Notes) and abs(Notes[i+2].xPosition-Notes[i].xPosition)>2*ws*VerticalWhiteSpaceRatio.QUARTER_NOTE.value and abs(Notes[i].yPosition -Notes[i+1].yPosition)>ws*VerticalWhiteSpaceRatio.QUARTER_NOTE.value:
+    #         #print(VerticalWhiteSpaceRatio.QUARTER_NOTE.value,Notes[i].yPosition -Notes[i+1].yPosition,ws,abs(Notes[i+2].xPosition-Notes[i].xPosition))
+    #         y=(Notes[i].yPosition+Notes[i+1].yPosition)/2
+    #         pos = getShortestDistance(y, linesPositions)
+    #         Notes.append(Note(Notes[i].xPosition, y,positionNotationDict[pos], 1))   
+
+    # Notes.sort(key=lambda x: x.xPosition)
     return Notes
 
 ##############################################################################################
@@ -358,7 +365,7 @@ def matchClefs(binary, ws):
         binary[yCenters:yCenters+int((VerticalWhiteSpaceRatio.CLEF.value*ws)),
                xCenters-ws:xCenters+int((HorizontalWhiteSpaceRatio.CLEF.value*ws))] = 255
 
-    show_images([result, binary])
+    # show_images([result, binary])
 
 
 ##############################################################################################
