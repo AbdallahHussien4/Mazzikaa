@@ -16,6 +16,8 @@ def normalizeImage(img):
 
 def matchNoteHead(img, dim):
 
+    image = np.ones_like(img, dtype=np.uint8)
+    
     template = np.array([[1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                          [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                          [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -31,39 +33,27 @@ def matchNoteHead(img, dim):
                          [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
                          [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]], dtype=np.uint8)
 
-    # template2 = np.array([[1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
-    #                       [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
-    #                       [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    #                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    #                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
-    #                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]], dtype=np.uint8)
-    
     template = cv2.resize(template, (dim, dim))
     im1 = convolve2d(img, template)
     im2 = convolve2d(1 - img, 1 - template)
-    im3 = np.add(im1, im2)
+    im3 = np.bitwise_or(im1, im2)
     im3[im3 < 0.9 * dim * dim] = 0
 
     im3[im3 > 0] = 1
 
     matches = []
     element = cv2.getStructuringElement(
-        cv2.MORPH_ELLIPSE, (3, 3))
+        cv2.MORPH_ELLIPSE, (dim, dim))
 
     im3 = binary_dilation(im3, selem=element)
     contours = find_contours(im3, 0.8)
 
     for contour in contours:
-        Ymin = min(contour[:, 0])
-        Ymax = max(contour[:, 0])
+        Ymin = int(min(contour[:, 0]))
+        Ymax = int(max(contour[:, 0]))
+        Xmin = int(min(contour[:, 1]))
+        Xmax = int(max(contour[:, 1]))
+        image[Ymin: Ymax, Xmin: Xmax] = 0
         matches.append(int((Ymax + Ymin) / 2))
 
     show_images([im3])
