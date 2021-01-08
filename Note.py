@@ -9,6 +9,10 @@ class Note:
     accidental: str
     numBeams: int
     numDots: int
+    ChordStart :int
+    ChordEnd :int
+    ChordMid :int
+
 
     def __init__(self, x, y, notation, dur, acc=''):
         self.xPosition = x
@@ -18,6 +22,9 @@ class Note:
         self.accidental = acc
         self.numBeams = 0
         self.numDots = 0
+        self.ChordStart = 0
+        self.ChordEnd = 0
+        self.ChordMid = 0
 
     def __str__(self):
         if self.duration == 1:
@@ -31,11 +38,17 @@ class Note:
         elif self.duration == 16:
             Type = 'Sixteenth'
         elif self.duration == 32:
-            Type = 'Thirty Second'
+            Type = 'Thirty Two'
         else:
             Type = 'LOL'
         string = 'X: ' + str(self.xPosition) + '  '
         string += 'Y: ' + str(self.yPosition) + '  '
+        if(self.ChordStart==1):
+            self.notation="{"+self.notation+","
+        elif (self.ChordEnd==1):
+            self.notation=self.notation+"}"  
+        elif (self.ChordMid==1):
+            self.notation=self.notation+","      
         string += 'Notation: ' + self.notation + self.accidental + '/' + str(self.duration) + self.numDots*'.' + '  '
         string += 'Type: ' + Type 
 

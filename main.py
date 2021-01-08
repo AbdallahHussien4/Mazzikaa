@@ -19,7 +19,7 @@ def normalizeImage(img):
         return np.uint8(img * 255)
     return img
 
-img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\02.PNG', 0)
+img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\07.PNG', 0)
 img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
 
 img = normalizeImage(img)

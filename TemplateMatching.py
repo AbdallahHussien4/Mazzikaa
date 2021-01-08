@@ -348,14 +348,27 @@ def matchNotes(binary, sl, ws, linesPositions):
     for note in Notes:
         note.duration *= 2**note.numBeams
 
-    # for i in range(len(Notes) - 1):
-    #     if Notes[i].xPosition == Notes[i+1].xPosition and i+2<len(Notes) and abs(Notes[i+2].xPosition-Notes[i].xPosition)>2*ws*VerticalWhiteSpaceRatio.QUARTER_NOTE.value and abs(Notes[i].yPosition -Notes[i+1].yPosition)>ws*VerticalWhiteSpaceRatio.QUARTER_NOTE.value:
-    #         #print(VerticalWhiteSpaceRatio.QUARTER_NOTE.value,Notes[i].yPosition -Notes[i+1].yPosition,ws,abs(Notes[i+2].xPosition-Notes[i].xPosition))
-    #         y=(Notes[i].yPosition+Notes[i+1].yPosition)/2
-    #         pos = getShortestDistance(y, linesPositions)
-    #         Notes.append(Note(Notes[i].xPosition, y,positionNotationDict[pos], 1))   
 
-    # Notes.sort(key=lambda x: x.xPosition)
+##################################################
+################ Detect Chords ###################
+##################################################
+    Started=False
+    for i in range(len(Notes) - 1):
+        if abs(Notes[i].xPosition - Notes[i+1].xPosition) <int(ws*1.5):
+            print("Hi")
+            if not Started :
+                Notes[i].ChordStart=1
+                Notes[i+1].ChordMid=1
+                Notes[i+1].ChordEnd=1
+                Started=True
+            else:
+                if Notes[i].ChordEnd==1:
+                    Notes[i].ChordEnd=0
+                Notes[i].ChordMid=1
+                Notes[i+1].ChordMid=1
+                Notes[i+1].ChordEnd=1
+        else:
+            Started=False
     return Notes
 
 ##############################################################################################
