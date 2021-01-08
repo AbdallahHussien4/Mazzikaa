@@ -7,8 +7,8 @@ from segmentation import*
 from MakeImgHorizontal import *
 from RemoveLines import *
 from detection import quarterEighthNoteDetection, fillHalfNoteHeads
-from digitsDetection import *
-from digitsClassifier import *
+# from digitsDetection import *
+# from digitsClassifier import *
 from cv2 import cv2
 from TemplateMatching import matchNotes, matchClefs
 from skimage.morphology import skeletonize
@@ -36,8 +36,8 @@ for seg in segmented:
     removed = removeLines(seg, sls[1])
     Notes = matchNotes(removed, sl, ws, linesPositions)
     for i in Notes:
-        print(i.yPosition)
-    show_images([seg])
+        print(i)
+    #show_images([seg])
 # run_experiment('raw')
 # img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)
 # img_three=img = cv2.imread("numbers/3_1.png",cv2.IMREAD_GRAYSCALE)
