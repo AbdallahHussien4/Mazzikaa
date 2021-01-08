@@ -8,6 +8,7 @@ class Note:
     duration: int
     accidental: str
     numBeams: int
+    numDots: int
 
     def __init__(self, x, y, notation, dur, acc=''):
         self.xPosition = x
@@ -16,6 +17,7 @@ class Note:
         self.duration = dur
         self.accidental = acc
         self.numBeams = 0
+        self.numDots = 0
 
     def __str__(self):
         if self.duration == 1:
@@ -34,7 +36,7 @@ class Note:
             Type = 'LOL'
         string = 'X: ' + str(self.xPosition) + '  '
         string += 'Y: ' + str(self.yPosition) + '  '
-        string += 'Notation: ' + self.notation + self.accidental + '/' + str(self.duration) + '  '
+        string += 'Notation: ' + self.notation + self.accidental + '/' + str(self.duration) + self.numDots*'.' + '  '
         string += 'Type: ' + Type 
 
         return string
