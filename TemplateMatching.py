@@ -38,7 +38,9 @@ clefPaths = ["clefs/treble_1.jpg", "clefs/treble_2.jpg"]
 quarterPaths = ["Notes/quarter.jpg"]
 halfPaths = ["Notes/half1.jpg", "Notes/half2.jpg"]
 wholePaths = ["Notes/whole.jpg", "Notes/whole2.jpg", "Notes/whole3.jpg"]
-sharpPaths = ["Accidentals/sharp.jpg"]
+dotPaths = ["Notes/dot.jpg"]
+twoDotsPaths = ["Notes/dots.jpg"]
+sharpPaths = ["Accidentals/sharp.jpg", "Accidentals/sharp2.jpg"]
 flatPaths = ["Accidentals/flat.jpg"]
 doubleSharpPaths = ["Accidentals/doublesharp.jpg"]
 flagPaths = ["Flags/flag.jpg"]
@@ -55,6 +57,8 @@ class HorizontalWhiteSpaceRatio(Enum):
     FLAG = 1
     DOUBLE_FLAG = 1.2
     TRIPLE_FLAG = 1.1
+    DOT = 1
+    DOTS = 2
     CLEF = 2.7
 
 
@@ -65,6 +69,7 @@ class StaffLinesRatio(Enum):
 
 
 class VerticalWhiteSpaceRatio(Enum):
+
     CLEF = 8
     QUARTER_NOTE = 1
     HALF_NOTE = 1
@@ -76,6 +81,8 @@ class VerticalWhiteSpaceRatio(Enum):
     FLAG = 3
     DOUBLE_FLAG = 3.5
     TRIPLE_FLAG = 4
+    DOT = 0.5
+    DOTS = 0.5
 
 
 class MatchingThreshold(Enum):
@@ -83,13 +90,15 @@ class MatchingThreshold(Enum):
     QUARTER_NOTE = 0.7
     HALF_NOTE = 0.6
     WHOLE_NOTE = 0.65
-    SHARP = 0.7
+    SHARP = 0.65
     DOUBLE_SHARP = 0.7
     FLAT = 0.7
     DOUBLE_FLAT = 0.7
     FLAG = 0.7
     DOUBLE_FLAG = 0.7
-    TRIPLE_FLAG = 0.7
+    TRIPLE_FLAG = 0.65
+    DOT = 0.8
+    DOTS = 0.8
 
 
 def normalizeImage(img):
@@ -152,7 +161,8 @@ def matchNotes(binary, sl, ws, linesPositions):
 
     quarters = []
     for i in quarter_imgs:
-        scaleFactor = i.shape[0] / (ws * VerticalWhiteSpaceRatio.QUARTER_NOTE.value)
+        scaleFactor = i.shape[0] / \
+            (ws * VerticalWhiteSpaceRatio.QUARTER_NOTE.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
@@ -193,6 +203,11 @@ def matchNotes(binary, sl, ws, linesPositions):
             binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAG.value)+ws], ws, 2)
         Flag3 = matchFlags(
             binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.TRIPLE_FLAG.value)+ws], ws, 3)
+        Dot = matchDots(
+            binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOT.value)+ws], ws, 1)
+        Dots = matchDots(
+            binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOTS.value)+ws], ws, 2)
+
         note = Note(x, y, positionNotationDict[pos], 4)
 
         if sharp == 1:
@@ -210,6 +225,11 @@ def matchNotes(binary, sl, ws, linesPositions):
             note.duration *= 4
         elif Flag1 == 1:
             note.duration *= 2
+
+        if Dots:
+            note.numDots = 2
+        elif Dot:
+            note.numDots = 1
 
         Notes.append(note)
 
@@ -245,11 +265,23 @@ def matchNotes(binary, sl, ws, linesPositions):
         Xmax = int(max(contour[:, 1]))
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
-        xCenter = (Xmax + Xmin) / 2
-        yCenter = (Ymax + Ymin) / 2
-        pos = getShortestDistance(yCenter, linesPositions)
-        Notes.append(Note(xCenter, yCenter,
-                          positionNotationDict[pos], 2))
+        x = int((Xmax + Xmin) / 2)
+        y = int((Ymax + Ymin) / 2)
+        pos = getShortestDistance(y, linesPositions)
+
+        Dot = matchDots(
+            binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOT.value)+ws], ws, 1)
+        Dots = matchDots(
+            binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOTS.value)+ws], ws, 2)
+        
+        note = Note(x, y, positionNotationDict[pos], 2)
+        
+        if Dots:
+            note.numDots = 2
+        elif Dot:
+            note.numDots = 1
+
+        Notes.append(note)
 
 
 ######################################################################
@@ -493,6 +525,44 @@ def matchFlags(binary, ws, numFlags=1):
         flags.append(i)
 
     locations = match(binary, flags, 70, 140, flagMatchingThresh)[0]
+    for i in locations:
+        if(len(i[0]) > 0):
+            return 1
+    return 0
+
+
+##############################################################################################
+#############                                                                   ##############
+#############                                                                   ##############
+#############                                                                   ##############
+#############                            DOTS                                   ##############
+#############                                                                   ##############
+#############                                                                   ##############
+#############                                                                   ##############
+##############################################################################################
+
+def matchDots(binary, ws, numDots=1):
+
+    if numDots == 1:
+        dotMatchingThresh = MatchingThreshold.DOT.value
+        dotVerticalWhiteSpaceRatio = VerticalWhiteSpaceRatio.DOT.value
+        mdotPaths = dotPaths
+    else:
+        dotMatchingThresh = MatchingThreshold.DOTS.value
+        dotVerticalWhiteSpaceRatio = VerticalWhiteSpaceRatio.DOTS.value
+        mdotPaths = twoDotsPaths
+
+    dot_imgs = [cv2.imread(dot, 0) for dot in mdotPaths]
+
+    dots = []
+    for i in dot_imgs:
+        scaleFactor = i.shape[0]/(ws * dotVerticalWhiteSpaceRatio)
+        rows, cols = i.shape
+        i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
+        i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+        dots.append(i)
+
+    locations = match(binary, dots, 70, 140, dotMatchingThresh)[0]
     for i in locations:
         if(len(i[0]) > 0):
             return 1
