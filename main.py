@@ -41,7 +41,7 @@ def binarize(img, ratioOfPeakGLVal=1/5, grayLevelsThreshold=10):
     binary = cv2.threshold(img, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
     imgSize = img.shape[0] * img.shape[1]
     blackPixelsPercentage = histogram(binary, nbins=2)[0][0].sum() / imgSize * 100
-    print(blackPixelsPercentage)
+    #print(blackPixelsPercentage)
     
     numGrayLevels = 0
     hist = histogram(img, nbins=256)
@@ -52,10 +52,10 @@ def binarize(img, ratioOfPeakGLVal=1/5, grayLevelsThreshold=10):
             numGrayLevels += 1
     #print(numGrayLevels)
     if numGrayLevels >= grayLevelsThreshold and blackPixelsPercentage >= 10:
-        print('Solly')
+        #print('Solly')
         return AdaptiveThresholding(img)
 
-    print('Otsu')
+    #print('Otsu')
     return cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
 
 def normalizeImage(img):
@@ -63,24 +63,25 @@ def normalizeImage(img):
         return np.uint8(img * 255)
     return img
 
-fImages=[]
-images = [cv2.imread(img, 0) for img in tests]
-for image in images:
-    #fImages.append(cv2.threshold(image, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1])
-    #fImages.append(AdaptiveThresholding(image))
-    show_images([binarize(image)])
+# fImages=[]
+# images = [cv2.imread(img, 0) for img in tests]
+# for image in images:
+#     #fImages.append(cv2.threshold(image, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1])
+#     #fImages.append(AdaptiveThresholding(image))
+#     show_images([binarize(image)])
 
 img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\02.png', 0)
 #img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
-show_images([img])
+#show_images([img])
 img = normalizeImage(img)
-retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+binary = binarize(img)
 sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
 sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
 segmented = segmentwithmorph(binary, white_spce=ws, line_thick=sl)
 f = open("testOut.txt", "w")
-
-for seg in segmented:
+f.write('{\n')
+last = False
+for index, seg in enumerate(segmented):
     firstLine, lastLine = get_StartingEnding_StaffLinePosition(seg, ws)
     linesPositions = generateLinesArray(sl, ws, firstLine, lastLine)
     #quarterEighthNoteDetection(seg, linesPositions, (ws, ws))
@@ -91,11 +92,14 @@ for seg in segmented:
     localizeCheck=localize_digits(removed,Notes[0].xPosition,ws)
     if(localizeCheck!= None):
         digit1,digit2=detectDigits(localizeCheck[0],seg,ws,sl,localizeCheck[1],localizeCheck[2])
-        f.write('[\meter<"'+digit1[0]+'/'+digit2[0]+'">')
-    GenerateOutput(Notes,f)
+        f.write('[ \meter<"'+digit1[0]+'/'+digit2[0]+'"> ')
+    if index == len(segmented) - 1:
+        last = True
+    GenerateOutput(Notes, f, last)
     # for i in Notes:
     #     print(i)
     #show_images([seg])
+f.write('}')
 # run_experiment('raw')
 # img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)
 # img_three=img = cv2.imread("numbers/3_1.png",cv2.IMREAD_GRAYSCALE)
