@@ -40,6 +40,7 @@ def detectDigits(img,img_withLines,white_spce,line_thick,start_col,end_col):
         if(staff_height/4<(yMax-yMin)<staff_height/2):
             digits.append(img_withLines[yMin:yMax,start_col:end_col])
     show_images(digits)
+    return runTest(digits[0]),runTest(digits[1]) 
     print("classifier output on the two digits")
     print(runTest(digits[0]),runTest(digits[1]))
     

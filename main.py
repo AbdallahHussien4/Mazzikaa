@@ -8,11 +8,13 @@ from MakeImgHorizontal import *
 from RemoveLines import *
 from detection import quarterEighthNoteDetection, fillHalfNoteHeads
 from GenerateOutput import *
+from LocalizeDigits import localize_digits
 # from digitsDetection import *
 # from digitsClassifier import *
-from cv2 import cv2
+import cv2 as cv2
 from TemplateMatching import matchNotes, matchClefs
 from skimage.morphology import skeletonize
+from digitsDetection import detectDigits
 
 
 def normalizeImage(img):
@@ -20,9 +22,9 @@ def normalizeImage(img):
         return np.uint8(img * 255)
     return img
 
-img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\01.PNG', 0)
-img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
-
+img = cv2.imread('/home/belal/Downloads/PublicTestCases-version1.1/test-set-scanned/test-cases/02.PNG', 0)
+#img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
+show_images([img])
 img = normalizeImage(img)
 retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
@@ -35,8 +37,13 @@ for seg in segmented:
     linesPositions = generateLinesArray(sl, ws, firstLine, lastLine)
     #quarterEighthNoteDetection(seg, linesPositions, (ws, ws))
     #halfNoteDetection(seg, linesPositions, (ws, ws))
-    removed = removeLines(seg, sls[1])
+    removed,p = removeLines(seg, sls[1])
+    removed,x,y=matchClefs(removed,ws)
     Notes = matchNotes(removed, sl, ws, linesPositions)
+    localizeCheck=localize_digits(removed,Notes[0].xPosition,ws)
+    if(localizeCheck!= None):
+        digit1,digit2=detectDigits(localizeCheck[0],seg,ws,sl,localizeCheck[1],localizeCheck[2])
+        f.write('\meter<"'+digit1[0]+'/'+digit2[0]+'">')
     GenerateOutput(Notes,f)
     # for i in Notes:
     #     print(i)

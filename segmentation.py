@@ -3,7 +3,7 @@ from scipy.signal import find_peaks
 from skimage.morphology import binary_erosion,binary_dilation
 from skimage.measure import find_contours
 from skimage.draw import rectangle
-from cv2 import cv2
+import cv2 as cv2
 
 ##############################################this segmentation based on projection and morphology and has a bad output###########################
 #############################################but its advatage that it holds the position of every black line#####################################
