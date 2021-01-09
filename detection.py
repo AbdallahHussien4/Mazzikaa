@@ -5,7 +5,7 @@ from skimage.measure import find_contours
 from StaffLines import getSLsThickness_Whitespaces
 from scipy.ndimage.morphology import binary_fill_holes
 from detectSymbols import matchNoteHead
-
+import cv2
 
 def getShortestDistance(curPos, linesPos):
     minDist = np.sqrt(abs(np.square(curPos) - np.square(linesPos[0])))

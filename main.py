@@ -98,7 +98,6 @@ for index, seg in enumerate(segmented):
     GenerateOutput(Notes, f, last)
     # for i in Notes:
     #     print(i)
-    #show_images([seg])
 f.write('}')
 # run_experiment('raw')
 # img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)

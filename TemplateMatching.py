@@ -176,7 +176,7 @@ def matchNotes(binary, sl, ws, linesPositions):
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
-    #show_images([result,binary])
+    show_images([result,binary])
     contours = find_contours(result, 0.8)
 
     for contour in contours:
@@ -188,6 +188,8 @@ def matchNotes(binary, sl, ws, linesPositions):
         x = int((Xmax + Xmin) / 2)
         y = int((Ymax + Ymin) / 2)
         pos = getShortestDistance(y, linesPositions)
+        if pos > 20:
+            continue
 
         # TODO Don't check all rows in that area, instead, bound it with vertical WS ratio
         sharp = matchSharp(
@@ -267,6 +269,8 @@ def matchNotes(binary, sl, ws, linesPositions):
         x = int((Xmax + Xmin) / 2)
         y = int((Ymax + Ymin) / 2)
         pos = getShortestDistance(y, linesPositions)
+        if pos > 20:
+            continue
 
         Dot = matchDots(
             binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOT.value)+ws], ws, 1)
@@ -315,9 +319,10 @@ def matchNotes(binary, sl, ws, linesPositions):
         Xmax = int(max(contour[:, 1]))
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
-        xCenter = (Xmax + Xmin) / 2
         yCenter = (Ymax + Ymin) / 2
         pos = getShortestDistance(yCenter, linesPositions)
+        if pos > 20:
+            continue
         Notes.append(Note(x, y, positionNotationDict[pos][0], positionNotationDict[pos][1], 1))
 
     Notes.sort(key=lambda x: x.xPosition)
