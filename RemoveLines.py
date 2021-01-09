@@ -41,7 +41,7 @@ def removeLines(image,line_height):
         sum_row=sum_row/255
         binarized[peak,sum_row>(2*line_height+1)]=255
     #show_images([binarized])
-    return binarized
+    return binarized,peaks
 
 # def removeLinesErod(binarized):
 #     orig_img=binarized.copy()

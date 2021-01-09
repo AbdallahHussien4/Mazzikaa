@@ -7,11 +7,14 @@ from segmentation import*
 from MakeImgHorizontal import *
 from RemoveLines import *
 from detection import quarterEighthNoteDetection, fillHalfNoteHeads
+from GenerateOutput import *
+from LocalizeDigits import localize_digits
 # from digitsDetection import *
 # from digitsClassifier import *
-from cv2 import cv2
+import cv2 as cv2
 from TemplateMatching import matchNotes, matchClefs
 from skimage.morphology import skeletonize
+from digitsDetection import detectDigits
 
 
 tests = [r'PublicTestCases\test-set-camera-captured\test-cases\12.jpg', 
@@ -66,31 +69,32 @@ for image in images:
     #fImages.append(cv2.threshold(image, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1])
     #fImages.append(AdaptiveThresholding(image))
     show_images([binarize(image)])
-    #fImages.append(fftpack.fftshift(np.log(np.abs(fftpack.fft2(image))+1)))
-#showHist(image)
-# binary2 = binarize(image)
-# img = cv2.imread(r'PublicTestCases\test-set-camera-captured\test-cases\15.jpg', 0)
-# #showHist(img)
-# img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
-# img = normalizeImage(img)
-# binary = binarize(img)
-#show_images([fftpack.fftshift(np.log(np.abs(fftpack.fft2(img))+1)), fftpack.fftshift(np.log(np.abs(fftpack.fft2(image))+1))])
-#plt.show()
-# img = normalizeImage(img)
-# retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-# sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
-# sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
-# segmented = segmentwithmorph(binary, white_spce=ws, line_thick=sl)
 
-# for seg in segmented:
-#     firstLine, lastLine = get_StartingEnding_StaffLinePosition(seg, ws)
-#     linesPositions = generateLinesArray(sl, ws, firstLine, lastLine)
-#     quarterEighthNoteDetection(seg, linesPositions, (ws, ws))
-#     #halfNoteDetection(seg, linesPositions, (ws, ws))
-#     removed = removeLines(seg, sls[1])
-#     Notes = matchNotes(removed, sl, ws, linesPositions)
-#     for i in Notes:
-#         print(i)
+img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\02.png', 0)
+#img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
+show_images([img])
+img = normalizeImage(img)
+retval, binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
+sls, wss = getSLsThickness_Whitespaces(binary, min_max=True)
+segmented = segmentwithmorph(binary, white_spce=ws, line_thick=sl)
+f = open("testOut.txt", "w")
+
+for seg in segmented:
+    firstLine, lastLine = get_StartingEnding_StaffLinePosition(seg, ws)
+    linesPositions = generateLinesArray(sl, ws, firstLine, lastLine)
+    #quarterEighthNoteDetection(seg, linesPositions, (ws, ws))
+    #halfNoteDetection(seg, linesPositions, (ws, ws))
+    removed,p = removeLines(seg, sls[1])
+    removed,x,y=matchClefs(removed,ws)
+    Notes = matchNotes(removed, sl, ws, linesPositions)
+    localizeCheck=localize_digits(removed,Notes[0].xPosition,ws)
+    if(localizeCheck!= None):
+        digit1,digit2=detectDigits(localizeCheck[0],seg,ws,sl,localizeCheck[1],localizeCheck[2])
+        f.write('[\meter<"'+digit1[0]+'/'+digit2[0]+'">')
+    GenerateOutput(Notes,f)
+    # for i in Notes:
+    #     print(i)
     #show_images([seg])
 # run_experiment('raw')
 # img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)

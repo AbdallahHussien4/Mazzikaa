@@ -2,7 +2,6 @@ from commonfunctions import np, show_images
 from skimage.morphology import binary_opening, binary_closing, binary_erosion, binary_dilation
 from skimage.draw import rectangle
 from skimage.measure import find_contours
-from cv2 import cv2 
 from StaffLines import getSLsThickness_Whitespaces
 from scipy.ndimage.morphology import binary_fill_holes
 from detectSymbols import matchNoteHead

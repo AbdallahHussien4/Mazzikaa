@@ -4,7 +4,6 @@ from skimage.feature import match_template
 from commonfunctions import show_images, convolve2d
 from skimage.measure import find_contours
 from skimage.morphology import binary_dilation, binary_closing
-from cv2 import cv2
 import skimage.io as io
 from Preprocessing import AdaptiveThresholding
 

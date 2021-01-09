@@ -1,4 +1,3 @@
-from cv2 import cv2
 import numpy as np
 import skimage.io as io
 from RemoveLines import removeLines
@@ -9,6 +8,7 @@ from skimage.measure import find_contours
 from enum import Enum
 from Note import Note
 from detection import getShortestDistance
+import cv2 as cv2
 
 positionNotationDict = {
     0: 'b3',
@@ -35,17 +35,17 @@ positionNotationDict = {
 }
 
 clefPaths = ["clefs/treble_1.jpg", "clefs/treble_2.jpg"]
-quarterPaths = ["Notes/quarter.jpg","Notes/quarter2.jpg"]
-halfPaths = ["Notes/half1.jpg", "Notes/half2.jpg"]
-wholePaths = ["Notes/whole.jpg", "Notes/whole2.jpg", "Notes/whole3.jpg"]
-dotPaths = ["Notes/dot.jpg"]
-twoDotsPaths = ["Notes/dots.jpg"]
-sharpPaths = ["Accidentals/sharp.jpg", "Accidentals/sharp2.jpg"]
-flatPaths = ["Accidentals/flat.jpg"]
-doubleSharpPaths = ["Accidentals/doublesharp.jpg"]
-flagPaths = ["Flags/flag.jpg"]
-doubleFlagPaths = ["Flags/doubleflag.jpg"]
-tripleFlagPaths = ["Flags/tripleflag.jpg"]
+quarterPaths = ["Notes/quarter.JPG","Notes/quarter2.jpg"]
+halfPaths = ["Notes/half1.JPG", "Notes/half2.JPG"]
+wholePaths = ["Notes/whole.JPG", "Notes/whole2.JPG", "Notes/whole3.JPG"]
+dotPaths = ["Notes/dot.JPG"]
+twoDotsPaths = ["Notes/dots.JPG"]
+sharpPaths = ["Accidentals/sharp.JPG", "Accidentals/sharp2.JPG"]
+flatPaths = ["Accidentals/flat.JPG"]
+doubleSharpPaths = ["Accidentals/doublesharp.JPG"]
+flagPaths = ["Flags/flag.JPG"]
+doubleFlagPaths = ["Flags/doubleflag.JPG"]
+tripleFlagPaths = ["Flags/tripleflag.JPG"]
 
 
 class HorizontalWhiteSpaceRatio(Enum):
@@ -407,8 +407,8 @@ def matchClefs(binary, ws):
         Ymax = int(max(contour[:, 0]))
         xCenters = int(((Xmax - Xmin) / 2 + Xmin))
         yCenters = int(((Ymax - Ymin) / 2 + Ymin))
-        binary[yCenters:yCenters+int((VerticalWhiteSpaceRatio.CLEF.value*ws)),
-               xCenters-ws:xCenters+int((HorizontalWhiteSpaceRatio.CLEF.value*ws))] = 255
+        binary[:,0:xCenters+int((HorizontalWhiteSpaceRatio.CLEF.value*ws))] = 255
+    return binary,xCenters,yCenters
 
     # show_images([result, binary])
 
