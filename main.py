@@ -29,33 +29,21 @@ tests = [r'PublicTestCases\test-set-camera-captured\test-cases\12.jpg',
          r'imgs/m2.jpg', 
          r'imgs/m3.jpg']
 
-def show_image_in_freq(img, f):
-    img_in_freq = fftpack.fft2(img)
-    
-    show_images([img,
-                fftpack.fftshift(np.log(np.abs(img_in_freq)+1)) # log for better intensity scale,
-                ], ['Image', 'Image in Freq. Domain'])
-
 def binarize(img, ratioOfPeakGLVal=1/5, grayLevelsThreshold=10):
 
     binary = cv2.threshold(img, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
     imgSize = img.shape[0] * img.shape[1]
     blackPixelsPercentage = histogram(binary, nbins=2)[0][0].sum() / imgSize * 100
-    #print(blackPixelsPercentage)
     
     numGrayLevels = 0
     hist = histogram(img, nbins=256)
     pixelsThreshold = hist[0].max() * ratioOfPeakGLVal
-    #print(pixelsThreshold)
     for i in hist[0]:
         if i > pixelsThreshold:
             numGrayLevels += 1
-    #print(numGrayLevels)
     if numGrayLevels >= grayLevelsThreshold and blackPixelsPercentage >= 10:
-        #print('Solly')
         return AdaptiveThresholding(img)
 
-    #print('Otsu')
     return cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
 
 def normalizeImage(img):
@@ -70,7 +58,7 @@ def normalizeImage(img):
 #     #fImages.append(AdaptiveThresholding(image))
 #     show_images([binarize(image)])
 
-img = cv2.imread(r'PublicTestCases\test-set-scanned\test-cases\02.png', 0)
+img = cv2.imread(r'PublicTestCases-version1.1\test-set-scanned\test-cases\02.PNG', 0)
 #img = cv2.fastNlMeansDenoising(img, None, 10, 7, 21)
 #show_images([img])
 img = normalizeImage(img)
@@ -87,7 +75,7 @@ for index, seg in enumerate(segmented):
     #quarterEighthNoteDetection(seg, linesPositions, (ws, ws))
     #halfNoteDetection(seg, linesPositions, (ws, ws))
     removed,p = removeLines(seg, sls[1])
-    removed,x,y=matchClefs(removed,ws)
+    matchClefs(removed,ws)
     Notes = matchNotes(removed, sl, ws, linesPositions)
     localizeCheck=localize_digits(removed,Notes[0].xPosition,ws)
     if(localizeCheck!= None):

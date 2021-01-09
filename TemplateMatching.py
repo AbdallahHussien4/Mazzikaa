@@ -176,7 +176,7 @@ def matchNotes(binary, sl, ws, linesPositions):
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
-    show_images([result,binary])
+    #show_images([result,binary])
     contours = find_contours(result, 0.8)
 
     for contour in contours:
@@ -357,22 +357,46 @@ def matchNotes(binary, sl, ws, linesPositions):
 ################ Detect Chords ###################
 ##################################################
     Started=False
+    chordStarts=[]
+    chordEnds=[]
+    chords = []
+    chord = []
+    end = -1
     for i in range(len(Notes) - 1):
-        if abs(Notes[i].xPosition - Notes[i+1].xPosition) <int(ws*1.5):
-            #print("Hi")
+        if abs(Notes[i].xPosition - Notes[i+1].xPosition) < int(ws*1.5):
             if not Started :
-                Notes[i].ChordStart=1
-                Notes[i+1].ChordMid=1
-                Notes[i+1].ChordEnd=1
+                end = i + 1
                 Started=True
+                chordStarts.append(i)
+                chordEnds.append(i+1)
+                notation = Notes[i].notation + Notes[i].notationP
+                chord.append(notation)
+                notation = Notes[i+1].notation + Notes[i+1].notationP
+                chord.append(notation)
             else:
-                if Notes[i].ChordEnd==1:
-                    Notes[i].ChordEnd=0
-                Notes[i].ChordMid=1
-                Notes[i+1].ChordMid=1
-                Notes[i+1].ChordEnd=1
+                if end == i:
+                    chordEnds.pop()
+                end = i + 1
+                notation = Notes[i+1].notation + Notes[i+1].notationP
+                chord.append(notation)
+                chordEnds.append(i+1)
         else:
             Started=False
+            if len(chord) > 1:
+                chords.append(chord)
+                chord = []
+    
+    for index, chord in enumerate(chords):
+        chord.sort()
+        cIndex = 0
+        Notes[chordStarts[index]].ChordStart = 1
+        for n in range(chordStarts[index], chordEnds[index] + 1):
+            Notes[n].notation = chord[cIndex][0]
+            Notes[n].notationP = chord[cIndex][1]
+            Notes[n].ChordMid = 1
+            cIndex += 1
+        Notes[chordEnds[index]].ChordEnd = 1
+
     return Notes
 
 ##############################################################################################
@@ -412,7 +436,6 @@ def matchClefs(binary, ws):
         xCenters = int(((Xmax - Xmin) / 2 + Xmin))
         yCenters = int(((Ymax - Ymin) / 2 + Ymin))
         binary[:,0:xCenters+int((HorizontalWhiteSpaceRatio.CLEF.value*ws))] = 255
-    return binary,xCenters,yCenters
 
     # show_images([result, binary])
 
