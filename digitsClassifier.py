@@ -85,7 +85,7 @@ def run_experiment(feature_set):
 def runTest(img):
     if os.path.exists("trained_model.pickle"):
         trained_model = pickle.load(open("trained_model.pickle", "rb"))
-        show_images([img])
+        #show_images([img])
         features = extract_hog_features(img)
         return(trained_model.predict([features]))
     else:

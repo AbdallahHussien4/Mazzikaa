@@ -25,13 +25,13 @@ positionNotationDict = {
     11: 'e2',
     12: 'd2',
     13: 'c2',
-    14: 'b',
-    15: 'a',
-    16: 'g',
-    17: 'f',
-    18: 'e',
-    19: 'd',
-    20: 'c'
+    14: 'b1',
+    15: 'a1',
+    16: 'g1',
+    17: 'f1',
+    18: 'e1',
+    19: 'd1',
+    20: 'c1'
 }
 
 clefPaths = ["clefs/treble_1.jpg", "clefs/treble_2.jpg"]
@@ -176,7 +176,7 @@ def matchNotes(binary, sl, ws, linesPositions):
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
-    show_images([result,binary])
+    #show_images([result,binary])
     contours = find_contours(result, 0.8)
 
     for contour in contours:
@@ -207,8 +207,8 @@ def matchNotes(binary, sl, ws, linesPositions):
         Dots = matchDots(
             binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOTS.value)+ws], ws, 2)
 
-        note = Note(x, y, positionNotationDict[pos], 4)
-
+        note = Note(x, y, positionNotationDict[pos][0], positionNotationDict[pos][1], 4)
+    
         if sharp == 1:
             note.accidental = '#'
         elif DoubleSharp == 1:
@@ -273,8 +273,8 @@ def matchNotes(binary, sl, ws, linesPositions):
         Dots = matchDots(
             binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOTS.value)+ws], ws, 2)
         
-        note = Note(x, y, positionNotationDict[pos], 2)
-        
+        note = Note(x, y, positionNotationDict[pos][0], positionNotationDict[pos][1], 2)
+
         if Dots:
             note.numDots = 2
         elif Dot:
@@ -318,8 +318,7 @@ def matchNotes(binary, sl, ws, linesPositions):
         xCenter = (Xmax + Xmin) / 2
         yCenter = (Ymax + Ymin) / 2
         pos = getShortestDistance(yCenter, linesPositions)
-        Notes.append(Note(xCenter, yCenter,
-                          positionNotationDict[pos], 1))
+        Notes.append(Note(x, y, positionNotationDict[pos][0], positionNotationDict[pos][1], 1))
 
     Notes.sort(key=lambda x: x.xPosition)
 
@@ -355,7 +354,7 @@ def matchNotes(binary, sl, ws, linesPositions):
     Started=False
     for i in range(len(Notes) - 1):
         if abs(Notes[i].xPosition - Notes[i+1].xPosition) <int(ws*1.5):
-            print("Hi")
+            #print("Hi")
             if not Started :
                 Notes[i].ChordStart=1
                 Notes[i+1].ChordMid=1
