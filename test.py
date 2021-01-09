@@ -11,6 +11,8 @@ from digitsDetection import *
 from digitsClassifier import *
 from matplotlib import pyplot as plt
 import cv2 as cv2
+import math
+from operator import itemgetter
 ##################################################TEST ML MODEL#######################################################3333
 # run_experiment('raw')
 # img_seven=img = cv2.imread("numbers/8_2.png",cv2.IMREAD_GRAYSCALE)
@@ -50,33 +52,54 @@ import cv2 as cv2
 
 # show_images(x)
 rotated=cv2.imread("PublicTestCases/test-set-camera-captured/test-cases/25.jpg",cv2.IMREAD_GRAYSCALE)
-#rotated=deskew(img)
-show_images([rotated])
-before=rotated.copy()
-rotated=AdaptiveThresholding(rotated,15)
-rotated=255-rotated
-horizontal_size = rotated.shape[1] // 30
-window=np.ones((1,horizontal_size))
-window2=np.ones((20,20))
+retval, binary = cv2.threshold(rotated, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-rotated=binary_erosion(rotated,selem=window)
-rotated=binary_dilation(rotated,selem=window)
-rotated=binary_dilation(rotated,selem=window2)
-rotated=1-rotated
-black_hist=np.zeros((rotated.shape[0],1))
-show_images([rotated])
-for row in range(0,rotated.shape[0]):
-    black_hist[row,0]=(rotated[row, :] == 0).sum()
-black_lines=np.where(black_hist>=int(0.1*rotated.shape[1]))
-start=int(black_lines[0][0])
-end=int(black_lines[0][-1])
-startY=start-50
-endY=end+50
-black_hist=np.zeros((1,rotated.shape[1]))
-for col in range(0,rotated.shape[1]):
-    black_hist[0,col]=(rotated[:, col] == 0).sum()
+binary=255-binary
+orig=binary.copy()
+horizontal_size = rotated.shape[1] // 10
+window=np.ones((horizontal_size,1))
 
-black_lines=np.where(black_hist>=30)
-startX=int(black_lines[1][0])
-endX=int(black_lines[1][-1])+50
-show_images([before[startY:endY,startX:endX],before])
+binary=binary_dilation(binary,selem=window)
+
+# rotated=255-rotated
+show_images([binary])
+binary=np.array(binary,dtype=np.uint8)
+contours,hierarchy = cv2.findContours(binary, 1, 2)
+max_area =0
+cnt=[]
+for contour in contours:
+    area = cv2.contourArea(contour)
+    if(area>max_area):
+        max_area=area
+        cnt = contour
+        
+rect = cv2.minAreaRect(cnt)
+box = cv2.boxPoints(rect)
+print(box)
+sorted_x=sorted(box, key=itemgetter(0))
+print(sorted_x)
+if(sorted_x[0][1]<sorted_x[1][1]):
+    top_left=sorted_x[0]
+    bottom_left=sorted_x[1]
+else:
+    top_left=sorted_x[1]
+    bottom_left=sorted_x[0]
+
+if(sorted_x[2][1]<sorted_x[3][1]):
+    top_right=sorted_x[2]
+    bottom_right=sorted_x[3]
+else:
+    top_right=sorted_x[3]
+    bottom_right=sorted_x[2]
+
+
+# print(top_left,top_right,bottom_left,bottom_right)
+# print(box[2],box[3],box[1],box[0])
+#pts1=np.float32([box[2],box[3],box[1],box[0]])
+pts1=np.float32([top_left,top_right,bottom_left,bottom_right])
+pts2 = np.float32([[0,0],[binary.shape[1],0],[0,binary.shape[0]],[binary.shape[1],binary.shape[0]]])
+M = cv2.getPerspectiveTransform(pts1,pts2)
+perspectiv = cv2.warpPerspective(orig,M,(binary.shape[1],binary.shape[0]))
+#perspectiv=cv2.resize(perspectiv,(1000,1000))
+show_images([255-perspectiv])
+
