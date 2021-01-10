@@ -35,7 +35,7 @@ positionNotationDict = {
 }
 
 clefPaths = ["clefs/treble_1.jpg", "clefs/treble_2.jpg"]
-quarterPaths = ["Notes/quarter.JPG","Notes/quarter2.jpg"]
+quarterPaths = ["Notes/quarter.JPG", "Notes/quarter2.jpg"]
 halfPaths = ["Notes/half1.JPG", "Notes/half2.JPG"]
 wholePaths = ["Notes/whole.JPG", "Notes/whole2.JPG", "Notes/whole3.JPG"]
 dotPaths = ["Notes/dot.JPG"]
@@ -46,6 +46,46 @@ doubleSharpPaths = ["Accidentals/doublesharp.JPG"]
 flagPaths = ["Flags/flag.JPG"]
 doubleFlagPaths = ["Flags/doubleflag.JPG"]
 tripleFlagPaths = ["Flags/tripleflag.JPG"]
+
+
+class TemplateScalingStartPercent(Enum):
+
+    QUARTER_NOTE = 80
+    HALF_NOTE = 80
+    WHOLE_NOTE = 80
+    SHARP = 90
+    DOUBLE_SHARP = 80
+    FLAT = 80
+    DOUBLE_FLAT = 80
+    FLAG = 70
+    DOUBLE_FLAG = 70
+    TRIPLE_FLAG = 70
+    DOT = 80
+    DOTS = 80
+    CLEF = 80
+
+
+class TemplateScalingEndPercent(Enum):
+
+    QUARTER_NOTE = 120
+    HALF_NOTE = 120
+    WHOLE_NOTE = 120
+    SHARP = 120
+    DOUBLE_SHARP = 120
+    FLAT = 120
+    DOUBLE_FLAT = 120
+    FLAG = 140
+    DOUBLE_FLAG = 140
+    TRIPLE_FLAG = 140
+    DOT = 120
+    DOTS = 120
+    CLEF = 120
+
+
+class StaffLinesRatio(Enum):
+
+    BEAMS_lOWER = 3
+    BEAMS_UPPER = 9
 
 
 class HorizontalWhiteSpaceRatio(Enum):
@@ -62,12 +102,6 @@ class HorizontalWhiteSpaceRatio(Enum):
     CLEF = 2.7
 
 
-class StaffLinesRatio(Enum):
-
-    BEAMS_lOWER = 3
-    BEAMS_UPPER = 7
-
-
 class VerticalWhiteSpaceRatio(Enum):
 
     CLEF = 8
@@ -79,8 +113,8 @@ class VerticalWhiteSpaceRatio(Enum):
     FLAT = 2.5
     DOUBLE_FLAT = 2
     FLAG = 3
-    DOUBLE_FLAG = 3.5
-    TRIPLE_FLAG = 4
+    DOUBLE_FLAG = 3
+    TRIPLE_FLAG = 3
     DOT = 0.5
     DOTS = 0.5
 
@@ -110,9 +144,8 @@ def normalizeImage(img):
 def match(img, templates, start_percent=50, stop_percent=150, threshold=0.8):
     best_location_count = -1
     best_locations = []
-    best_scale = 1
 
-    for scale in [i/100.0 for i in range(start_percent, stop_percent + 1, 3)]:
+    for scale in [i/100.0 for i in range(start_percent, stop_percent + 1, 5)]:
         locations = []
         location_count = 0
 
@@ -130,10 +163,9 @@ def match(img, templates, start_percent=50, stop_percent=150, threshold=0.8):
         if (location_count > best_location_count):
             best_location_count = location_count
             best_locations = locations
-            best_scale = scale
         elif (location_count < best_location_count):
             pass
-    return best_locations, best_scale
+    return best_locations
 
 
 ##########################################################################################
@@ -170,13 +202,15 @@ def matchNotes(binary, sl, ws, linesPositions):
     if ws % 2 == 0:
         ws += 1
     result = np.zeros_like(binary, dtype=np.uint8)
-    element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(ws/2), int(ws/2)))
-    locations = match(binary, quarters, 50, 150,MatchingThreshold.QUARTER_NOTE.value)[0]
+    element = cv2.getStructuringElement(
+        cv2.MORPH_ELLIPSE, (int(ws/2), int(ws/2)))
+    locations = match(binary, quarters, TemplateScalingStartPercent.QUARTER_NOTE.value,
+                      TemplateScalingEndPercent.QUARTER_NOTE.value, MatchingThreshold.QUARTER_NOTE.value)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
-    #show_images([result,binary])
+    # show_images([result,binary])
     contours = find_contours(result, 0.8)
 
     for contour in contours:
@@ -191,26 +225,22 @@ def matchNotes(binary, sl, ws, linesPositions):
         if pos > 20:
             continue
 
-        # TODO Don't check all rows in that area, instead, bound it with vertical WS ratio
+        # TODO Optimization: Don't check all rows in that area, instead, bound it with vertical WS ratio
         sharp = matchSharp(
             binary[:, x-int(ws*HorizontalWhiteSpaceRatio.SHARP.value)-ws:x], ws)
         DoubleSharp = matchDoubleSharp(
             binary[:, x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_SHARP.value)-ws:x], ws)
         Flat = matchFlat(
             binary[:, x-int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAT.value)-ws:x], ws)
-        Flag1 = matchFlags(
-            binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.FLAG.value)+ws], ws, 1)
-        Flag2 = matchFlags(
-            binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOUBLE_FLAG.value)+ws], ws, 2)
-        Flag3 = matchFlags(
-            binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.TRIPLE_FLAG.value)+ws], ws, 3)
+        flags = numFlags(binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.FLAG.value)+ws], ws)
+        
         Dot = matchDots(
             binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOT.value)+ws], ws, 1)
         Dots = matchDots(
             binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOTS.value)+ws], ws, 2)
 
         note = Note(x, y, positionNotationDict[pos][0], positionNotationDict[pos][1], 4)
-    
+
         if sharp == 1:
             note.accidental = '#'
         elif DoubleSharp == 1:
@@ -220,12 +250,7 @@ def matchNotes(binary, sl, ws, linesPositions):
         elif Flat == 1:
             note.accidental = '&'
 
-        if Flag3 == 1:
-            note.duration *= 8
-        elif Flag2 == 1:
-            note.duration *= 4
-        elif Flag1 == 1:
-            note.duration *= 2
+        note.duration *= 2**flags
 
         if Dots:
             note.numDots = 2
@@ -254,8 +279,8 @@ def matchNotes(binary, sl, ws, linesPositions):
     result = np.zeros_like(binary, dtype=np.uint8)
     element = cv2.getStructuringElement(
         cv2.MORPH_ELLIPSE, (ws, ws))
-    locations = match(binary, halfs, 70, 140,
-                      MatchingThreshold.HALF_NOTE.value)[0]
+    locations = match(binary, halfs, TemplateScalingStartPercent.HALF_NOTE.value, TemplateScalingEndPercent.HALF_NOTE.value,
+                      MatchingThreshold.HALF_NOTE.value)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
@@ -272,12 +297,12 @@ def matchNotes(binary, sl, ws, linesPositions):
         if pos > 20:
             continue
 
+        note = Note(x, y, positionNotationDict[pos][0], positionNotationDict[pos][1], 2)
+
         Dot = matchDots(
             binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOT.value)+ws], ws, 1)
         Dots = matchDots(
             binary[:, x:x+int(ws*HorizontalWhiteSpaceRatio.DOTS.value)+ws], ws, 2)
-        
-        note = Note(x, y, positionNotationDict[pos][0], positionNotationDict[pos][1], 2)
 
         if Dots:
             note.numDots = 2
@@ -307,8 +332,8 @@ def matchNotes(binary, sl, ws, linesPositions):
     result = np.zeros_like(binary, dtype=np.uint8)
     element = cv2.getStructuringElement(
         cv2.MORPH_ELLIPSE, (ws, ws))
-    locations = match(binary, wholes, 70, 140,
-                      MatchingThreshold.WHOLE_NOTE.value)[0]
+    locations = match(binary, wholes, TemplateScalingStartPercent.WHOLE_NOTE.value, TemplateScalingEndPercent.WHOLE_NOTE.value,
+                      MatchingThreshold.WHOLE_NOTE.value)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
@@ -320,10 +345,13 @@ def matchNotes(binary, sl, ws, linesPositions):
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
         yCenter = (Ymax + Ymin) / 2
+        x = int((Xmax + Xmin) / 2)
+        y = int((Ymax + Ymin) / 2)
         pos = getShortestDistance(yCenter, linesPositions)
         if pos > 20:
             continue
-        Notes.append(Note(x, y, positionNotationDict[pos][0], positionNotationDict[pos][1], 1))
+        Notes.append(
+            Note(x, y, positionNotationDict[pos][0], positionNotationDict[pos][1], 1))
 
     Notes.sort(key=lambda x: x.xPosition)
 
@@ -333,11 +361,10 @@ def matchNotes(binary, sl, ws, linesPositions):
     finished = -1
     entered = False
     for i in range(len(Notes) - 1):
-        # Both are quarter
-        if Notes[i].duration == 4 and Notes[i + 1].duration == 4:
+        # Both are quarter and relatively far
+        if Notes[i].duration == 4 and Notes[i + 1].duration == 4 and Notes[i + 1].xPosition - Notes[i].xPosition > 1.5 * ws:
             col = (Notes[i].xPosition + Notes[i + 1].xPosition) / 2
             encoded = encodeList(binary[:, int(col)])
-            #print(encoded)
             for x, y in encoded:
                 if y == 0:
                     if sl * StaffLinesRatio.BEAMS_lOWER.value < x < sl * StaffLinesRatio.BEAMS_UPPER.value:
@@ -356,17 +383,17 @@ def matchNotes(binary, sl, ws, linesPositions):
 ##################################################
 ################ Detect Chords ###################
 ##################################################
-    Started=False
-    chordStarts=[]
-    chordEnds=[]
+    Started = False
+    chordStarts = []
+    chordEnds = []
     chords = []
     chord = []
     end = -1
     for i in range(len(Notes) - 1):
-        if abs(Notes[i].xPosition - Notes[i+1].xPosition) < int(ws*1.5):
-            if not Started :
+        if abs(Notes[i].xPosition - Notes[i+1].xPosition) < (ws*1.5):
+            if not Started:
                 end = i + 1
-                Started=True
+                Started = True
                 chordStarts.append(i)
                 chordEnds.append(i+1)
                 notation = Notes[i].notation + Notes[i].notationP
@@ -381,11 +408,13 @@ def matchNotes(binary, sl, ws, linesPositions):
                 chord.append(notation)
                 chordEnds.append(i+1)
         else:
-            Started=False
+            Started = False
+            end = -1
             if len(chord) > 1:
                 chords.append(chord)
                 chord = []
-    
+    if len(chord) > 1:
+        chords.append(chord)
     for index, chord in enumerate(chords):
         chord.sort()
         cIndex = 0
@@ -422,7 +451,8 @@ def matchClefs(binary, ws):
     result = np.zeros_like(binary, dtype=np.uint8)
     element = cv2.getStructuringElement(
         cv2.MORPH_ELLIPSE, (ws, ws))
-    locations = match(binary, clefs, 50, 150, MatchingThreshold.CLEF.value)[0]
+    locations = match(binary, clefs, TemplateScalingStartPercent.CLEF.value,
+                      TemplateScalingEndPercent.CLEF.value, MatchingThreshold.CLEF.value)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
@@ -434,8 +464,8 @@ def matchClefs(binary, ws):
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
         xCenters = int(((Xmax - Xmin) / 2 + Xmin))
-        yCenters = int(((Ymax - Ymin) / 2 + Ymin))
-        binary[:,0:xCenters+int((HorizontalWhiteSpaceRatio.CLEF.value*ws))] = 255
+        binary[:, 0:xCenters +
+               int((HorizontalWhiteSpaceRatio.CLEF.value*ws))] = 255
 
     # show_images([result, binary])
 
@@ -465,8 +495,8 @@ def matchSharp(binary, ws):
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         sharps.append(i)
-    locations = match(binary, sharps, 70, 140,
-                      MatchingThreshold.SHARP.value)[0]
+    locations = match(binary, sharps, TemplateScalingStartPercent.SHARP.value, TemplateScalingEndPercent.SHARP.value,
+                      MatchingThreshold.SHARP.value)
     for i in locations:
         if(len(i[0]) > 0):
             return 1
@@ -480,6 +510,7 @@ def matchSharp(binary, ws):
 
 
 def matchFlat(binary, ws):
+
     flat_imgs = [cv2.imread(flat, 0) for flat in flatPaths]
 
     flats = []
@@ -493,8 +524,8 @@ def matchFlat(binary, ws):
     result = np.zeros_like(binary, dtype=np.uint8)
     element = cv2.getStructuringElement(
         cv2.MORPH_ELLIPSE, (ws, ws))
-    # TODO if we match more templates then send them all and check all locations
-    locations = match(binary, flats, 70, 140, MatchingThreshold.FLAT.value)[0]
+    locations = match(binary, flats, TemplateScalingStartPercent.FLAT.value,
+                      TemplateScalingEndPercent.FLAT.value, MatchingThreshold.FLAT.value)
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
@@ -527,8 +558,8 @@ def matchDoubleSharp(binary, ws):
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         doubleSharps.append(i)
 
-    locations = match(binary, doubleSharps, 70, 140,
-                      MatchingThreshold.DOUBLE_SHARP.value)[0]
+    locations = match(binary, doubleSharps, TemplateScalingStartPercent.DOUBLE_SHARP.value, TemplateScalingEndPercent.DOUBLE_SHARP.value,
+                      MatchingThreshold.DOUBLE_SHARP.value)
     for i in locations:
         if(len(i[0]) > 0):
             return 1
@@ -552,14 +583,22 @@ def matchFlags(binary, ws, numFlags=1):
         flagMatchingThresh = MatchingThreshold.FLAG.value
         flagVerticalWhiteSpaceRatio = VerticalWhiteSpaceRatio.FLAG.value
         mflagPaths = flagPaths
+        startPercent = TemplateScalingStartPercent.FLAG.value
+        endPercent = TemplateScalingEndPercent.FLAG.value
+
     elif numFlags == 2:
         flagMatchingThresh = MatchingThreshold.DOUBLE_FLAG.value
         flagVerticalWhiteSpaceRatio = VerticalWhiteSpaceRatio.DOUBLE_FLAG.value
         mflagPaths = doubleFlagPaths
+        startPercent = TemplateScalingStartPercent.DOUBLE_FLAG.value
+        endPercent = TemplateScalingEndPercent.DOUBLE_FLAG.value
+
     else:
         flagMatchingThresh = MatchingThreshold.TRIPLE_FLAG.value
         flagVerticalWhiteSpaceRatio = VerticalWhiteSpaceRatio.TRIPLE_FLAG.value
         mflagPaths = tripleFlagPaths
+        startPercent = TemplateScalingStartPercent.TRIPLE_FLAG.value
+        endPercent = TemplateScalingEndPercent.TRIPLE_FLAG.value
 
     flag_imgs = [cv2.imread(flag, 0) for flag in mflagPaths]
 
@@ -571,7 +610,8 @@ def matchFlags(binary, ws, numFlags=1):
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         flags.append(i)
 
-    locations = match(binary, flags, 70, 140, flagMatchingThresh)[0]
+    locations = match(binary, flags, startPercent,
+                      endPercent, flagMatchingThresh)
     for i in locations:
         if(len(i[0]) > 0):
             return 1
@@ -594,10 +634,15 @@ def matchDots(binary, ws, numDots=1):
         dotMatchingThresh = MatchingThreshold.DOT.value
         dotVerticalWhiteSpaceRatio = VerticalWhiteSpaceRatio.DOT.value
         mdotPaths = dotPaths
+        startPercent = TemplateScalingStartPercent.DOT.value
+        endPercent = TemplateScalingEndPercent.DOT.value
+
     else:
         dotMatchingThresh = MatchingThreshold.DOTS.value
         dotVerticalWhiteSpaceRatio = VerticalWhiteSpaceRatio.DOTS.value
         mdotPaths = twoDotsPaths
+        startPercent = TemplateScalingStartPercent.DOTS.value
+        endPercent = TemplateScalingEndPercent.DOTS.value
 
     dot_imgs = [cv2.imread(dot, 0) for dot in mdotPaths]
 
@@ -609,12 +654,24 @@ def matchDots(binary, ws, numDots=1):
         i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         dots.append(i)
 
-    locations = match(binary, dots, 70, 140, dotMatchingThresh)[0]
+    locations = match(binary, dots, startPercent,
+                      endPercent, dotMatchingThresh)
     for i in locations:
         if(len(i[0]) > 0):
             return 1
     return 0
 
+
+def numFlags(binary, ws):
+
+    if matchFlags(binary, ws, 3):
+        return 3
+    if matchFlags(binary, ws, 2):
+        return 2
+    if matchFlags(binary, ws, 1):
+        return 1
+    
+    return 0
 
 ##############################################################################################
 #############                                                                   ##############
