@@ -35,6 +35,7 @@ positionNotationDict = {
 }
 
 clefPaths = ["clefs/treble_1.jpg", "clefs/treble_2.jpg"]
+timePaths = ["Accidentals/4_4.JPG"]
 quarterPaths = ["Notes/quarter.JPG", "Notes/quarter2.jpg"]
 halfPaths = ["Notes/half1.JPG", "Notes/half2.JPG"]
 wholePaths = ["Notes/whole.JPG", "Notes/whole2.JPG", "Notes/whole3.JPG"]
@@ -63,6 +64,7 @@ class TemplateScalingStartPercent(Enum):
     DOT = 80
     DOTS = 80
     CLEF = 80
+    TIME = 80
 
 
 class TemplateScalingEndPercent(Enum):
@@ -80,6 +82,7 @@ class TemplateScalingEndPercent(Enum):
     DOT = 120
     DOTS = 120
     CLEF = 120
+    TIME = 120
 
 
 class StaffLinesRatio(Enum):
@@ -117,12 +120,13 @@ class VerticalWhiteSpaceRatio(Enum):
     TRIPLE_FLAG = 3
     DOT = 0.5
     DOTS = 0.5
+    TIME = 4.5
 
 
 class MatchingThreshold(Enum):
-    CLEF = 0.4
-    QUARTER_NOTE = 0.7
-    HALF_NOTE = 0.6
+    CLEF = 0.3
+    QUARTER_NOTE = 0.65
+    HALF_NOTE = 0.5
     WHOLE_NOTE = 0.65
     SHARP = 0.65
     DOUBLE_SHARP = 0.7
@@ -131,8 +135,9 @@ class MatchingThreshold(Enum):
     FLAG = 0.7
     DOUBLE_FLAG = 0.7
     TRIPLE_FLAG = 0.65
-    DOT = 0.8
-    DOTS = 0.8
+    DOT = 0.7
+    DOTS = 0.7
+    TIME = 0.5
 
 
 def normalizeImage(img):
@@ -152,7 +157,6 @@ def match(img, templates, start_percent=50, stop_percent=150, threshold=0.8):
         for template in templates:
             if (scale*template.shape[0] > img.shape[0] or scale*template.shape[1] > img.shape[1]):
                 continue
-
             template = cv2.resize(template, None,
                                   fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             result = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)
@@ -178,7 +182,7 @@ def match(img, templates, start_percent=50, stop_percent=150, threshold=0.8):
 ##########                                                                   #############
 ##########################################################################################
 
-def matchNotes(binary, sl, ws, linesPositions):
+def matchNotes(binary, sl, ws, linesPositions,isScanned):
 
     Notes = []
 
@@ -210,7 +214,7 @@ def matchNotes(binary, sl, ws, linesPositions):
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
-    # show_images([result,binary])
+    show_images([result,binary])
     contours = find_contours(result, 0.8)
 
     for contour in contours:
@@ -221,10 +225,11 @@ def matchNotes(binary, sl, ws, linesPositions):
         Ymax = int(max(contour[:, 0]))
         x = int((Xmax + Xmin) / 2)
         y = int((Ymax + Ymin) / 2)
-        pos = getShortestDistance(y, linesPositions)
+
+        pos = getShortestDistance(x, y, linesPositions, binary.shape[1],isScanned)
         if pos > 20:
             continue
-
+        print(pos)
         # TODO Optimization: Don't check all rows in that area, instead, bound it with vertical WS ratio
         sharp = matchSharp(
             binary[:, x-int(ws*HorizontalWhiteSpaceRatio.SHARP.value)-ws:x], ws)
@@ -293,7 +298,8 @@ def matchNotes(binary, sl, ws, linesPositions):
         Ymax = int(max(contour[:, 0]))
         x = int((Xmax + Xmin) / 2)
         y = int((Ymax + Ymin) / 2)
-        pos = getShortestDistance(y, linesPositions)
+
+        pos = getShortestDistance(x, y, linesPositions, binary.shape[1],isScanned)
         if pos > 20:
             continue
 
@@ -344,10 +350,9 @@ def matchNotes(binary, sl, ws, linesPositions):
         Xmax = int(max(contour[:, 1]))
         Ymin = int(min(contour[:, 0]))
         Ymax = int(max(contour[:, 0]))
-        yCenter = (Ymax + Ymin) / 2
         x = int((Xmax + Xmin) / 2)
         y = int((Ymax + Ymin) / 2)
-        pos = getShortestDistance(yCenter, linesPositions)
+        pos = getShortestDistance(x, y, linesPositions, binary.shape[1],isScanned)
         if pos > 20:
             continue
         Notes.append(
@@ -439,14 +444,14 @@ def matchNotes(binary, sl, ws, linesPositions):
 ##############################################################################################
 
 
-def matchClefs(binary, ws):
+def matchClefs(binary, ws,Clear=True):
     clef_imgs = [cv2.imread(clef, 0) for clef in clefPaths]
     clefs = []
     for i in clef_imgs:
         scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.CLEF.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
-        i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+        i = cv2.threshold(i, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         clefs.append(i)
     result = np.zeros_like(binary, dtype=np.uint8)
     element = cv2.getStructuringElement(
@@ -458,16 +463,52 @@ def matchClefs(binary, ws):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
     contours = find_contours(result, 0.8)
+    hasClef = False
+    Xs=[]
     for contour in contours:
         Xmin = int(min(contour[:, 1]))
         Xmax = int(max(contour[:, 1]))
-        Ymin = int(min(contour[:, 0]))
-        Ymax = int(max(contour[:, 0]))
         xCenters = int(((Xmax - Xmin) / 2 + Xmin))
-        binary[:, 0:xCenters +
-               int((HorizontalWhiteSpaceRatio.CLEF.value*ws))] = 255
+        Xs.append(xCenters)
+    if len(Xs)>0:    
+        minX=np.min(Xs)    
+        if minX < binary.shape[1]/3:
+            if Clear:
+                binary[:, 0:minX + int((HorizontalWhiteSpaceRatio.CLEF.value*ws))] = 255
+            print("XCenter :" , minX)    
+            hasClef = True
 
+    return hasClef
     # show_images([result, binary])
+
+def matchTimeSig(binary, ws):
+    time_imgs = [cv2.imread(time, 0) for time in timePaths]
+    times = []
+    for i in time_imgs:
+        scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.CLEF.value)
+        rows, cols = i.shape
+        i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
+        i = cv2.threshold(i, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+        times.append(i)
+    result = np.zeros_like(binary, dtype=np.uint8)
+    element = cv2.getStructuringElement(
+        cv2.MORPH_ELLIPSE, (ws, ws))
+    locations = match(binary, times, TemplateScalingStartPercent.CLEF.value,
+                      TemplateScalingEndPercent.TIME.value, MatchingThreshold.TIME.value)
+    show_images([result, binary])
+    for i in locations:
+        for j in range(len(i[0])):
+            result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
+    result = binary_dilation(result, selem=element)
+    contours = find_contours(result, 0.8)
+    hasTime = False
+    for contour in contours:
+        Xmin = int(min(contour[:, 1]))
+        Xmax = int(max(contour[:, 1]))
+        xCenters = int(((Xmax - Xmin) / 2 + Xmin))
+        hasTime = True
+
+    return hasTime
 
 
 ##############################################################################################

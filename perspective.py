@@ -24,6 +24,7 @@ def getPerspective(binary):
     binary=np.array(binary,dtype=np.uint8)
     contours,hierarchy = cv2.findContours(binary, 1, 2)
     cnt=[]
+    max_area = 0
     for contour in contours:
         area = cv2.contourArea(contour)
         if(area>max_area):
@@ -45,10 +46,12 @@ def getPerspective(binary):
     else:
         top_right=sorted_x[3]
         bottom_right=sorted_x[2]
-
+    test=np.zeros((binary.shape[0],binary.shape[1]))
+    test=cv2.drawContours(test,[np.int0(box)],0,(0,0,255),2)
+    show_images([test])
     pts1=np.float32([top_left,top_right,bottom_left,bottom_right])
+    print(pts1)
     pts2 = np.float32([[0,0],[binary.shape[1],0],[0,binary.shape[0]],[binary.shape[1],binary.shape[0]]])
     M = cv2.getPerspectiveTransform(pts1,pts2)
     perspectiv = cv2.warpPerspective(orig,M,(binary.shape[1],binary.shape[0]))
-    show_images([255-perspectiv])
-    return perspectiv
+    return 255-perspectiv

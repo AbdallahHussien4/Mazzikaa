@@ -1,6 +1,7 @@
-from commonfunctions import show_images, np, math, convolve2d
+from commonfunctions import *
 import os
 import skimage.filters as filters
+import cv2 as cv2
 
 def Rotate(img, angle):
     # convert rotation amount to radian
@@ -51,3 +52,32 @@ def AdaptiveThresholding(img,BlockSize=9,C=8):
     img_Out = 1-img_Out
     img_Out = np.uint8(img_Out*255)
     return img_Out
+
+def binarize(img, ratioOfPeakGLVal=1/5, grayLevelsThreshold=10):
+    isScanned=True
+    binary = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+    imgSize = img.shape[0] * img.shape[1]
+    blackPixelsPercentage = histogram(binary, nbins=2)[0][0].sum() / imgSize * 100
+    
+    numGrayLevels = 0
+    hist = histogram(img, nbins=256)
+    pixelsThreshold = hist[0].max() * ratioOfPeakGLVal
+    for i in hist[0]:
+        if i > pixelsThreshold:
+            numGrayLevels += 1
+
+    #Catch Not Scanned Image
+    if numGrayLevels >= grayLevelsThreshold:
+        binary2 = AdaptiveThresholding(img)
+        isScanned = False
+        if blackPixelsPercentage >= 10:
+            return binary2,isScanned
+        if histogram(binary2, nbins=2)[0][0].sum() / imgSize * 100 > blackPixelsPercentage:
+            return binary2,isScanned
+
+    return binary,isScanned
+
+def normalizeImage(img):
+    if(img.max() <= 1):
+        return np.uint8(img * 255)
+    return img

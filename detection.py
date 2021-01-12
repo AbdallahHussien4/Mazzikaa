@@ -6,20 +6,64 @@ from StaffLines import getSLsThickness_Whitespaces
 from scipy.ndimage.morphology import binary_fill_holes
 from detectSymbols import matchNoteHead
 import cv2
+from StaffLines import get_StartingEnding_StaffLinePosition
 
-def getShortestDistance(curPos, linesPos):
-    minDist = np.sqrt(abs(np.square(curPos) - np.square(linesPos[0])))
+def getShortestDistance(curPosX, curPosY, linesPos, width,isScanned):
+
+    if not isScanned:
+        if curPosX < int(width / 4):
+            linesPos = linesPos[0]
+        elif curPosX < int(width / 2):
+            linesPos = linesPos[1]
+        elif curPosX < int(3* width / 4):
+            linesPos = linesPos[2]
+        else:
+            linesPos = linesPos[3]
+    minDist = np.sqrt(abs(np.square(curPosY) - np.square(linesPos[0])))
     minIndex = 0
     for index, i in enumerate(linesPos):
-        dist = np.sqrt(abs(np.square(curPos) - np.square(i)))
+        dist = np.sqrt(abs(np.square(curPosY) - np.square(i)))
         if dist < minDist:
             minDist = dist
             minIndex = index
     return minIndex
 
 
-def generateLinesArray(sl, dim, firstLine, lastLine):
 
+def generateLinesArray(sl, dim, seg):
+
+    width = seg.shape[1]
+    allLines = []
+    for i in range(4):
+
+        firstLine, lastLine,seg[:, i * int(width/4) : i * int(width/4) + int(width/4)] = get_StartingEnding_StaffLinePosition(seg[:, i * int(width/4) : i * int(width/4) + int(width/4)], dim,False)
+
+        linesPos = []
+        initLine = firstLine
+        for i in range(10, 0, -1):
+            linesPos.append(initLine - (dim / 2 + sl / 2)*i)
+        linesPos.append(initLine)
+        for i in range(1, 19):
+            linesPos.append(initLine + (dim / 2 + sl / 2)*i)
+
+        linesPos2 = []
+        initLine = lastLine
+        for i in range(18, 0, -1):
+            linesPos2.append(initLine - (dim / 2 + sl / 2)*i)
+        linesPos2.append(initLine)
+        for i in range(1, 11):
+            linesPos2.append(initLine + (dim / 2 + sl / 2)*i)
+
+        combined = []
+        for i in range(len(linesPos)):
+            combined.append((linesPos[i] + linesPos2[i]) / 2)
+
+        allLines.append(combined)
+
+    return allLines
+
+def scannedGenerateLinesArray(sl, dim, seg):
+    firstLine, lastLine,seg = get_StartingEnding_StaffLinePosition(seg, dim,True)
     linesPos = []
     initLine = firstLine
     for i in range(10, 0, -1):
@@ -39,7 +83,7 @@ def generateLinesArray(sl, dim, firstLine, lastLine):
     combined = []
     for i in range(len(linesPos)):
         combined.append((linesPos[i] + linesPos2[i]) / 2)
-    return combined
+    return combined    
 
 
 def quarterEighthNoteDetection(segmentedSymbol, linesPositions, structElementDimMinMax):
@@ -88,10 +132,10 @@ def quarterEighthNoteDetection(segmentedSymbol, linesPositions, structElementDim
         opened[Ymin - structElementDim: Ymax,
                Xmin: Xmax + structElementDim] = binary_dilation(binary_erosion(img[Ymin - structElementDim: Ymax,
                                                                                    Xmin: Xmax + structElementDim], selem=minElement), selem=maxElement)
-    show_images([1 - opened])
+    #show_images([1 - opened])
     matches = matchNoteHead(1 - opened, Min)
     for rr in matches:
-        lineIndex = getShortestDistance(rr, linesPositions)
+        lineIndex = getShortestDistance(rr, 0, linesPositions, 0)
         print(lineIndex)
 
 
@@ -126,7 +170,7 @@ def halfNoteDetection(img, linesPositions, structElementDimMinMax):
 
         if Max / 2 > (Xmax - Xmin) - Max >= 0 and Max / 2 > (Ymax - Ymin) - Max >= 0:
             rr = int((Ymax - Ymin) / 2 + Ymin)
-            lineIndex = getShortestDistance(rr, linesPositions)
+            lineIndex = getShortestDistance(rr, 0, linesPositions, 0)
             print("half:", lineIndex)
 
     # show_images([opened])

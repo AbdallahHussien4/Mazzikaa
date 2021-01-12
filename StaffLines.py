@@ -3,11 +3,20 @@ import matplotlib.pyplot as plt
 from skimage.morphology import binary_dilation, binary_erosion, binary_opening
 from itertools import groupby
 from commonfunctions import show_images
+from MakeImgHorizontal import *
+from Preprocessing import *
+import cv2 as cv2
 
-def get_StartingEnding_StaffLinePosition(image, whitespaceLen):
-
-    element = np.ones((1, int(whitespaceLen * 2)))
+def get_StartingEnding_StaffLinePosition(image, whitespaceLen,isScanned):
+    show_images([image])
+    if not isScanned:
+        image = Make_IMG_HORIZONTAL(image,1,False)
+        image = normalizeImage(image)
+        image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+    show_images([image])
+    element = np.ones((1, int(whitespaceLen * 1.5)))
     opened = binary_opening(255 - image, selem=element)
+    #show_images([opened])
     height, width = opened.shape
     starting = []
     ending = []
@@ -19,11 +28,15 @@ def get_StartingEnding_StaffLinePosition(image, whitespaceLen):
                 if start == -1:
                     start = row
                 end = row
-        starting.append(start)
-        ending.append(end)
+        if start != -1 and end != -1:
+            starting.append(start)
+            ending.append(end)
     
-    # gets most frequent item in list
-    return max(set(starting), key = starting.count), max(set(ending), key = ending.count) 
+    # # gets most frequent item in list
+    # print(starting)
+    # print(ending)
+
+    return max(set(starting), key = starting.count), max(set(ending), key = ending.count) , image
 
 def countFrequency(my_list): 
     freq = {} 
@@ -153,6 +166,7 @@ def getSLsThickness_WhiteSpacesVertically(binary, min_max=False, show_hist=False
     width = binary.shape[1]
     for col in range(width):
         lista = encodeList(binary[:, col])
+        #print(lista)
         for x, y in lista:
             if(y == 0):
                 staffLinesWidth = np.append(staffLinesWidth, x)
@@ -182,7 +196,11 @@ def getSLsThickness_Whitespaces(binary, min_max=False, vertical=False, horizonta
         WS = minWS, maxWS
         return SL, WS
     if vertical:
+        #sl2, ws2 = getSLsThickness_WhiteSpacesHorizontally(binary, min_max=min_max, show_hist=show_hist)
         return getSLsThickness_WhiteSpacesVertically(binary, min_max=min_max, show_hist=show_hist)
+        # if 0.15 < ws1 / ws2 < 7:
+        #     return sl1, ws1
+        # return sl2, ws2
     if horizontal:
         return getSLsThickness_WhiteSpacesHorizontally(binary, min_max=min_max, show_hist=show_hist)
     SlWs1 = getSLsThickness_WhiteSpacesHorizontally(binary)

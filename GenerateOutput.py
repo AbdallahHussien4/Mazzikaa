@@ -4,6 +4,6 @@ def GenerateOutput(Notes, f, last):
         if not Note.inChord():
             f.write(' ')
     if last:
-        f.write(']\n')
+        f.write(']')
     else:
         f.write('],\n')  

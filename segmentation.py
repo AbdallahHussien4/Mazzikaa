@@ -72,50 +72,54 @@ def segmentwithmorph(img,white_spce,line_thick):
 
 ##########################################this approach depends on morphological opeartions and find contours and has a great output relatively#########
 ##########################################we must modify the commented parameter below to be generic###################################
-# def SegmentWithMorph(img,white_spce,staff_thick):
-#     orig_img=img.copy()
-#     img[img==255]=1
-#     img=1-img
-#     cols = img.shape[1]
-#     horizontal_size = cols // 30
-#     window=np.ones((1,horizontal_size))
-#     #this parameter must be modified
-#     staff_height=int(((4*white_spce)+(5*staff_thick))//3)
-#     window2=np.ones((staff_height,20))
-#     img=binary_erosion(img,selem=window)
-#     img=binary_dilation(img,selem=window)
-#     #for dilation
-#     img=binary_dilation(img,selem=window2)
-#     show_images([img])
-#     boxes=find_contours(img,0)
-#     imgs=[]
-#     yStart=[]
-#     yEnd=[]
-#     yStartCent=[]
-#     yEndCent=[]
-#     aspect_ratio=cols/((4*white_spce)+(5*staff_thick))
-#     for box in boxes:
-#         yMax = int(np.max(box[:,0]))
-#         yMin = int(np.min(box[:,0]))
-#         xMax = int(np.max(box[:,1]))
-#         xMin = int(np.min(box[:,1]))
-#         if ((aspect_ratio*0.25) <(xMax-xMin)/(yMax-yMin) < aspect_ratio):
-#             yStart.append(yMin)
-#             yEnd.append(yMax)
-#     staff_num=len(yStart)
-#     yStart[0]=0
-#     yEnd[staff_num-1]=img.shape[0]
-#     yStartCent.append(0)
-#     yEndCent.append(int(((yStart[1]+yEnd[0])/2)))
-#     for i in range(1,staff_num-1):
-#         yStartCent.append(int(((yStart[i]+yEnd[i-1])/2)))
-#         yEndCent.append(int(((yStart[i+1]+yEnd[i])/2)))
-#     yStartCent.append(int(((yStart[staff_num-1]+yEnd[staff_num-2])/2)))
-#     yEndCent.append(int(img.shape[0]))
-#     for i in range(0,staff_num):
-#         imgs.append(orig_img[yStartCent[i]:yEndCent[i],:])
-#     #show_images(imgs)
-#     return imgs
+def SegmentWithMorphCont(img,white_spce,staff_thick):
+    orig_img=img.copy()
+    img[img==255]=1
+    img=1-img
+    cols = img.shape[1]
+    horizontal_size = cols // 30
+    window=np.ones((1,horizontal_size))
+    #this parameter must be modified
+    staff_height=int(((4*white_spce)+(5*staff_thick))//3)
+    window2=np.ones((staff_height,20))
+    img=binary_erosion(img,selem=window)
+    img=binary_dilation(img,selem=window)
+    #for dilation
+    img=binary_dilation(img,selem=window2)
+    show_images([img])
+    boxes=find_contours(img,0)
+    imgs=[]
+    yStart=[]
+    yEnd=[]
+    yStartCent=[]
+    yEndCent=[]
+    aspect_ratio=cols/((4*white_spce)+(5*staff_thick))
+    for box in boxes:
+        yMax = int(np.max(box[:,0]))
+        yMin = int(np.min(box[:,0]))
+        xMax = int(np.max(box[:,1]))
+        xMin = int(np.min(box[:,1]))
+        if ((aspect_ratio*0.25) <(xMax-xMin)/(yMax-yMin) < aspect_ratio):
+            yStart.append(yMin)
+            yEnd.append(yMax)
+    staff_num=len(yStart)
+    yStart[0]=0
+    yEnd[staff_num-1]=img.shape[0]
+    yStartCent.append(0)
+    if (len(yStart)>1):
+        yEndCent.append(int(((yStart[1]+yEnd[0])/2)))
+    else:
+        imgs.append(orig_img[yStart[0]:yEnd[0],:])
+        return imgs
+    for i in range(1,staff_num-1):
+        yStartCent.append(int(((yStart[i]+yEnd[i-1])/2)))
+        yEndCent.append(int(((yStart[i+1]+yEnd[i])/2)))
+    yStartCent.append(int(((yStart[staff_num-1]+yEnd[staff_num-2])/2)))
+    yEndCent.append(int(img.shape[0]))
+    for i in range(0,staff_num):
+        imgs.append(orig_img[yStartCent[i]:yEndCent[i],:])
+    #show_images(imgs)
+    return imgs
 ################################################first version of segmentation###################################
 def segmentLines(img):
     #show_images([img])

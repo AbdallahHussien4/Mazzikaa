@@ -28,7 +28,9 @@ def localize_digits(img,firstNoteXposition,white_space):
         for contour in contours:
             Xmin = int(min(contour[:, 1]))
             Xmax = int(max(contour[:, 1]))
-            if Xmin < minXmin:
+            Ymin = int(min(contour[:, 0]))
+            Ymax = int(max(contour[:, 0]))
+            if Xmin < minXmin and (Xmax - Xmin ) > white_space and (Ymax - Ymin ) > white_space:
                 minXmin=Xmin
                 minXmax=Xmax
         if firstNoteXposition > minXmin and firstNoteXposition < minXmax:
