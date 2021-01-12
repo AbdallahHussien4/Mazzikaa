@@ -10,7 +10,7 @@ from digitsClassifier import runTest
 #     window=np.ones((3,3))
 #     img=binary_dilation(img,selem=window2)
 #     img=binary_erosion(img,selem=window)
-#     show_images([img])
+#     #show_images([img])
 #     white_hist=np.zeros((img.shape[0],1))
 #     for row in range(0,img.shape[0]):
 #         white_hist[row,0]=(img[row, :] == 1).sum()
@@ -22,15 +22,15 @@ from digitsClassifier import runTest
 #     cut=cut[0]
 #     first_digit=img_withLines[white[0]:cut+1,:]
 #     second_digit=img_withLines[cut+2:first_digit.shape[0]+cut+2,:]
-#     show_images([first_digit])
-#     show_images([second_digit])
+#     #show_images([first_digit])
+#     #show_images([second_digit])
 #     print(first_digit.shape)
 #     print(second_digit.shape)
 #     print(runTest(255-first_digit))
 #     print(runTest(255-second_digit))
 def detectDigits(img,img_withLines,white_spce,line_thick,start_col,end_col):
     img[img==255]=1
-    show_images([img])
+    #show_images([img])
     img=1-img
     digits=[]
     staff_height=((4*white_spce)+(5*line_thick))
@@ -40,7 +40,7 @@ def detectDigits(img,img_withLines,white_spce,line_thick,start_col,end_col):
         yMin = int(np.min(cnt[:,0]))
         if(staff_height/4<(yMax-yMin)<staff_height/2):
             digits.append(img_withLines[yMin:yMax,start_col:end_col])
-    show_images(digits)
+    #show_images(digits)
     if(len(digits)==2):
         return runTest(digits[0])[0],runTest(digits[1])[0]
     else:

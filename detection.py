@@ -136,7 +136,7 @@ def quarterEighthNoteDetection(segmentedSymbol, linesPositions, structElementDim
     matches = matchNoteHead(1 - opened, Min)
     for rr in matches:
         lineIndex = getShortestDistance(rr, 0, linesPositions, 0)
-        print(lineIndex)
+        #print(lineIndex)
 
 
 def halfNoteDetection(img, linesPositions, structElementDimMinMax):
@@ -171,7 +171,7 @@ def halfNoteDetection(img, linesPositions, structElementDimMinMax):
         if Max / 2 > (Xmax - Xmin) - Max >= 0 and Max / 2 > (Ymax - Ymin) - Max >= 0:
             rr = int((Ymax - Ymin) / 2 + Ymin)
             lineIndex = getShortestDistance(rr, 0, linesPositions, 0)
-            print("half:", lineIndex)
+            #print("half:", lineIndex)
 
     # show_images([opened])
 

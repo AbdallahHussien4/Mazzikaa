@@ -41,7 +41,7 @@ halfPaths = ["Notes/half1.JPG", "Notes/half2.JPG"]
 wholePaths = ["Notes/whole.JPG", "Notes/whole2.JPG", "Notes/whole3.JPG"]
 dotPaths = ["Notes/dot.JPG"]
 twoDotsPaths = ["Notes/dots.JPG"]
-sharpPaths = ["Accidentals/sharp.JPG", "Accidentals/sharp2.JPG"]
+sharpPaths = ["Accidentals/sharp.JPG", "Accidentals/sharp2.JPG" ]#,"Accidentals/sharp-space.png"]
 flatPaths = ["Accidentals/flat.JPG"]
 doubleSharpPaths = ["Accidentals/doublesharp.JPG"]
 flagPaths = ["Flags/flag.JPG"]
@@ -54,7 +54,7 @@ class TemplateScalingStartPercent(Enum):
     QUARTER_NOTE = 80
     HALF_NOTE = 80
     WHOLE_NOTE = 80
-    SHARP = 90
+    SHARP = 80
     DOUBLE_SHARP = 80
     FLAT = 80
     DOUBLE_FLAT = 80
@@ -124,9 +124,9 @@ class VerticalWhiteSpaceRatio(Enum):
 
 
 class MatchingThreshold(Enum):
-    CLEF = 0.3
+    CLEF = 0.35
     QUARTER_NOTE = 0.65
-    HALF_NOTE = 0.5
+    HALF_NOTE = 0.6
     WHOLE_NOTE = 0.65
     SHARP = 0.65
     DOUBLE_SHARP = 0.7
@@ -150,7 +150,7 @@ def match(img, templates, start_percent=50, stop_percent=150, threshold=0.8):
     best_location_count = -1
     best_locations = []
 
-    for scale in [i/100.0 for i in range(start_percent, stop_percent + 1, 5)]:
+    for scale in [i/100.0 for i in range(start_percent, stop_percent + 1, 3)]:
         locations = []
         location_count = 0
 
@@ -201,7 +201,7 @@ def matchNotes(binary, sl, ws, linesPositions,isScanned):
             (ws * VerticalWhiteSpaceRatio.QUARTER_NOTE.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
-        i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+        i = cv2.threshold(i, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
         quarters.append(i)
     if ws % 2 == 0:
         ws += 1
@@ -214,7 +214,7 @@ def matchNotes(binary, sl, ws, linesPositions,isScanned):
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
     result = binary_dilation(result, selem=element)
-    show_images([result,binary])
+    #show_images([result,binary])
     contours = find_contours(result, 0.8)
 
     for contour in contours:
@@ -229,7 +229,7 @@ def matchNotes(binary, sl, ws, linesPositions,isScanned):
         pos = getShortestDistance(x, y, linesPositions, binary.shape[1],isScanned)
         if pos > 20:
             continue
-        print(pos)
+        #print(pos)
         # TODO Optimization: Don't check all rows in that area, instead, bound it with vertical WS ratio
         sharp = matchSharp(
             binary[:, x-int(ws*HorizontalWhiteSpaceRatio.SHARP.value)-ws:x], ws)
@@ -278,7 +278,7 @@ def matchNotes(binary, sl, ws, linesPositions,isScanned):
         scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.HALF_NOTE.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
-        i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+        i = cv2.threshold(i, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]        
         halfs.append(i)
 
     result = np.zeros_like(binary, dtype=np.uint8)
@@ -332,7 +332,7 @@ def matchNotes(binary, sl, ws, linesPositions,isScanned):
             (ws * VerticalWhiteSpaceRatio.WHOLE_NOTE.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
-        i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+        i = cv2.threshold(i, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]        
         wholes.append(i)
 
     result = np.zeros_like(binary, dtype=np.uint8)
@@ -475,7 +475,7 @@ def matchClefs(binary, ws,Clear=True):
         if minX < binary.shape[1]/3:
             if Clear:
                 binary[:, 0:minX + int((HorizontalWhiteSpaceRatio.CLEF.value*ws))] = 255
-            print("XCenter :" , minX)    
+            #print("XCenter :" , minX)    
             hasClef = True
 
     return hasClef
@@ -495,7 +495,7 @@ def matchTimeSig(binary, ws):
         cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, times, TemplateScalingStartPercent.CLEF.value,
                       TemplateScalingEndPercent.TIME.value, MatchingThreshold.TIME.value)
-    show_images([result, binary])
+    #show_images([result, binary])
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
@@ -534,7 +534,7 @@ def matchSharp(binary, ws):
         scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.SHARP.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
-        i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+        i = cv2.threshold(i, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]        
         sharps.append(i)
     locations = match(binary, sharps, TemplateScalingStartPercent.SHARP.value, TemplateScalingEndPercent.SHARP.value,
                       MatchingThreshold.SHARP.value)
@@ -559,7 +559,7 @@ def matchFlat(binary, ws):
         scaleFactor = i.shape[0]/(ws * VerticalWhiteSpaceRatio.FLAT.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
-        i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+        i = cv2.threshold(i, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]        
         flats.append(i)
 
     result = np.zeros_like(binary, dtype=np.uint8)
@@ -596,7 +596,7 @@ def matchDoubleSharp(binary, ws):
             (ws * VerticalWhiteSpaceRatio.DOUBLE_SHARP.value)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
-        i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+        i = cv2.threshold(i, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]        
         doubleSharps.append(i)
 
     locations = match(binary, doubleSharps, TemplateScalingStartPercent.DOUBLE_SHARP.value, TemplateScalingEndPercent.DOUBLE_SHARP.value,
@@ -648,7 +648,7 @@ def matchFlags(binary, ws, numFlags=1):
         scaleFactor = i.shape[0]/(ws * flagVerticalWhiteSpaceRatio)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
-        i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+        i = cv2.threshold(i, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]        
         flags.append(i)
 
     locations = match(binary, flags, startPercent,
@@ -692,7 +692,7 @@ def matchDots(binary, ws, numDots=1):
         scaleFactor = i.shape[0]/(ws * dotVerticalWhiteSpaceRatio)
         rows, cols = i.shape
         i = cv2.resize(i, (int(cols / scaleFactor), int(rows / scaleFactor)))
-        i = cv2.threshold(i, 0, 1, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+        i = cv2.threshold(i, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]        
         dots.append(i)
 
     locations = match(binary, dots, startPercent,

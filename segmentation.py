@@ -86,7 +86,7 @@ def SegmentWithMorphCont(img,white_spce,staff_thick):
     img=binary_dilation(img,selem=window)
     #for dilation
     img=binary_dilation(img,selem=window2)
-    show_images([img])
+    #show_images([img])
     boxes=find_contours(img,0)
     imgs=[]
     yStart=[]
@@ -102,6 +102,8 @@ def SegmentWithMorphCont(img,white_spce,staff_thick):
         if ((aspect_ratio*0.25) <(xMax-xMin)/(yMax-yMin) < aspect_ratio):
             yStart.append(yMin)
             yEnd.append(yMax)
+    if(len(yStart)==0):
+        return [img]        
     staff_num=len(yStart)
     yStart[0]=0
     yEnd[staff_num-1]=img.shape[0]

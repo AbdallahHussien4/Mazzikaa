@@ -60,7 +60,7 @@ class Note:
 
         #string += 'Notation: ' + self.notation + self.accidental + '/' + str(self.duration) + self.numDots + '  '
         #string += 'Type: ' + Type 
-        string =  self.notation + self.notationP + '/' + str(self.duration) + self.numDots
+        string =  self.notation +self.accidental+ self.notationP + '/' + str(self.duration) + self.numDots
 
         return string
         

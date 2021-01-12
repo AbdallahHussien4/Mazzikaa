@@ -8,15 +8,15 @@ from Preprocessing import *
 import cv2 as cv2
 
 def get_StartingEnding_StaffLinePosition(image, whitespaceLen,isScanned):
-    show_images([image])
+    #show_images([image])
     if not isScanned:
-        image = Make_IMG_HORIZONTAL(image,1,False)
+        image = Make_IMG_HORIZONTAL(image,1,False)[0]
         image = normalizeImage(image)
         image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
-    show_images([image])
+    #show_images([image])
     element = np.ones((1, int(whitespaceLen * 1.5)))
     opened = binary_opening(255 - image, selem=element)
-    #show_images([opened])
+    ##show_images([opened])
     height, width = opened.shape
     starting = []
     ending = []
@@ -35,7 +35,8 @@ def get_StartingEnding_StaffLinePosition(image, whitespaceLen,isScanned):
     # # gets most frequent item in list
     # print(starting)
     # print(ending)
-
+    if len(starting) == 0 and len(ending) ==0:
+        return 0 , 5*ws
     return max(set(starting), key = starting.count), max(set(ending), key = ending.count) , image
 
 def countFrequency(my_list): 
