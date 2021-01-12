@@ -6,7 +6,6 @@ from detection import *
 from segmentation import*
 from MakeImgHorizontal import *
 from RemoveLines import *
-from detection import quarterEighthNoteDetection, fillHalfNoteHeads
 from GenerateOutput import *
 from LocalizeDigits import localize_digits
 from digitsDetection import *
@@ -20,11 +19,9 @@ from perspective import getPerspective
 import os 
 import glob 
 img_dir = "./dummmy/"
-
 for path in os.listdir(img_dir):
     try:
         img = io.imread(img_dir+path,as_gray=True)
-        show_images([img])
         isScanned = False
         #Normalize ,binarize and rotate the img
         img = normalizeImage(img)
@@ -36,9 +33,9 @@ for path in os.listdir(img_dir):
         binary = binarize(binary)[0]
 
         if Angle > 90:
-                binary = rotate(binary,180,resize=True,mode='constant',cval=1)
-                binary = normalizeImage(binary)
-                binary = binarize(binary)[0]
+            binary = rotate(binary,180,resize=True,mode='constant',cval=1)
+            binary = normalizeImage(binary)
+            binary = binarize(binary)[0]
         sl, ws = getSLsThickness_Whitespaces(binary, vertical=True)
 
         #to check existance of clefs after rotation
@@ -93,15 +90,16 @@ for path in os.listdir(img_dir):
         if numStaffs > 1:
             f.write('\n}')
         #generate accuracy percentage
-        # f = open("output-tests/"+path[0:2]+'.txt','r')
-        # str1 = f.read()
+        f = open("output-tests/"+path[0:2]+'.txt','r')
+        str1 = f.read()
 
-        # f = open(r"Mo3ed/"+path[0:2]+'.txt')
-        # str2 = f.read()
-        # print(' ')
-        # print(path[0:2], ":  ", SequenceMatcher(
-        #     lambda x: x == " ", str1, str2).ratio() * 100)
-        # print(' ')
+        f = open(r"Mo3ed/"+path[0:2]+'.txt')
+        str2 = f.read()
+        print(' ')
+        print(path[0:2], ":  ", SequenceMatcher(
+            lambda x: x == " ", str1, str2).ratio() * 100)
+        print(' ')
     except:
+        f = open("output-tests/"+path[0:2]+'.txt','w')
         f.write('\n}')
         continue    
