@@ -32,18 +32,3 @@ def removeLines(image,line_height):
         sum_row=sum_row/255
         binarized[peak,sum_row>(2*line_height+1)]=255
     return binarized,peaks
-
-# def removeLinesErod(binarized):
-#     orig_img=binarized.copy()
-#     binarized[binarized==255]=1
-#     binarized=1-binarized
-#     rows = binarized.shape[0]
-#     verticalsize = rows// 25
-#     # Create structure element for extracting vertical lines through morphology operations
-#     verticalStructure = cv2.getStructuringElement(cv2.MORPH_RECT, (1, verticalsize))
-#     # Apply morphology operations
-#     binarized = cv2.erode(binarized, verticalStructure)
-#     show_images([binarized])
-#     binarized = cv2.dilate(binarized, verticalStructure)
-#     # Show extracted vertical lines
-#     show_images([1-binarized])

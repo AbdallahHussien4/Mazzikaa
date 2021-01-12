@@ -15,8 +15,7 @@ def getSegWidth(img,line_thic):
 	black_lines=np.where(black_hist>=line_thic)
 	return black_lines[0][0]-black_lines[0][-1]
     
-##############################################this segmentation based on projection and morphology and has a bad output###########################
-#############################################but its advatage that it holds the position of every black line#####################################
+##############################################this will be called on the scanned imgs###########################
 def segmentwithmorph(img,white_spce,line_thick):
     width=img.shape[1]
     orig_img=img
@@ -74,8 +73,7 @@ def segmentwithmorph(img,white_spce,line_thick):
     show_images(imgs)
     return imgs
 
-##########################################this approach depends on morphological opeartions and find contours and has a great output relatively#########
-##########################################we must modify the commented parameter below to be generic###################################
+###########################this will be called on the camera captured imgs##########################
 def SegmentWithMorphCont(img,white_spce,staff_thick):
     orig_img=img.copy()
     show_images([orig_img])
@@ -84,7 +82,6 @@ def SegmentWithMorphCont(img,white_spce,staff_thick):
     cols = img.shape[1]
     horizontal_size = cols // 30
     window=np.ones((1,horizontal_size))
-    #this parameter must be modified
     staff_height=int(((4*white_spce)+(5*staff_thick))//3)
     window2=np.ones((staff_height,20))
     img=binary_erosion(img,selem=window)
@@ -127,46 +124,6 @@ def SegmentWithMorphCont(img,white_spce,staff_thick):
     for i in range(0,staff_num):
         imgs.append(orig_img[yStartCent[i]:yEndCent[i],:])
     return imgs
-################################################first version of segmentation###################################
-def segmentLines(img):
-    black_hist=np.zeros((img.shape[0],1))
-    for row in range(0,img.shape[0]):
-        black_hist[row,0]=(img[row, :] == 0).sum()
-    x = np.arange(img.shape[0])
-    fig = plt.figure(figsize =(10, 7))
-    plt.plot(x,black_hist)
-    plt.show()
-    ########################################################
-    # note here : I'm not sure if this tolerance is okay or not to decide the peak value of the black lines detection
-    ########################################################
-    peak=int((35/100)*black_hist.max())
-    black_lines=find_peaks(black_hist.ravel(),height=peak)
-    staff_num=int(np.ceil(len(black_lines[0])/5))
-    Ysub=np.empty(staff_num,dtype=np.uint)
-    Yinf=np.empty(staff_num,dtype=np.uint)
-    m=0
-    for i in range(0,len(black_lines[0]),5):
-        if(i>len(black_lines[0])-5):
-            Ysub[m]=black_lines[0][i-5]
-            Yinf[m]=black_lines[0][len(black_lines[0])-1]
-            m+=1
-        else:    
-            Ysub[m]=black_lines[0][i]
-            Yinf[m]=black_lines[0][i+4]
-            m+=1
-    Yinf_centre=np.empty(staff_num,dtype=np.uint)
-    Ysub_centre=np.empty(staff_num,dtype=np.uint)
-    tolerance=3
-    Ysub_centre[0]=0
-    Yinf_centre[0]=((Ysub[1]+Yinf[0])/2)+tolerance
-
-    for i in range(1,int(len(black_lines[0])/5)-1):
-        Ysub_centre[i]=((Ysub[i]+Yinf[i-1])/2)-tolerance
-        Yinf_centre[i]=((Ysub[i+1]+Yinf[i])/2)+tolerance
-    Ysub_centre[staff_num-1]=((Ysub[staff_num-1]+Yinf[staff_num-2])/2)-tolerance
-    Yinf_centre[staff_num-1]=img.shape[0]
-    return Ysub, Yinf, Ysub_centre
-
 ##############################################this function segments symbols and must be modified to hold more accurate output#########################
 def segmentSymbol(img):
     black_hist=np.zeros((img.shape[1],1))
