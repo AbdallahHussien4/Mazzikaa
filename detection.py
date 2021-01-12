@@ -132,11 +132,9 @@ def quarterEighthNoteDetection(segmentedSymbol, linesPositions, structElementDim
         opened[Ymin - structElementDim: Ymax,
                Xmin: Xmax + structElementDim] = binary_dilation(binary_erosion(img[Ymin - structElementDim: Ymax,
                                                                                    Xmin: Xmax + structElementDim], selem=minElement), selem=maxElement)
-    #show_images([1 - opened])
     matches = matchNoteHead(1 - opened, Min)
     for rr in matches:
         lineIndex = getShortestDistance(rr, 0, linesPositions, 0)
-        #print(lineIndex)
 
 
 def halfNoteDetection(img, linesPositions, structElementDimMinMax):
@@ -159,7 +157,6 @@ def halfNoteDetection(img, linesPositions, structElementDimMinMax):
     opened = np.bitwise_xor(binary_opening(
         1 - segmentedSymbol, selem=element), binary_opening(1 - filled, selem=element))
 
-    # show_images([binary_opening(1 - segmentedSymbol, selem=element), binary_opening(1 - filled, selem=element)])
     contours = find_contours(opened, 0.8)
 
     for contour in contours:
@@ -171,9 +168,6 @@ def halfNoteDetection(img, linesPositions, structElementDimMinMax):
         if Max / 2 > (Xmax - Xmin) - Max >= 0 and Max / 2 > (Ymax - Ymin) - Max >= 0:
             rr = int((Ymax - Ymin) / 2 + Ymin)
             lineIndex = getShortestDistance(rr, 0, linesPositions, 0)
-            #print("half:", lineIndex)
-
-    # show_images([opened])
 
 
 def fillHalfNoteHeads(image, structElementDim):
@@ -203,5 +197,4 @@ def fillHalfNoteHeads(image, structElementDim):
         opened[Ymin - structElementDim: Ymax + structElementDim,
                Xmin - structElementDim: Xmax + structElementDim] = binary_fill_holes(img[Ymin - structElementDim: Ymax + structElementDim,
                                                                                          Xmin - structElementDim: Xmax + structElementDim])
-    # show_images([img, opened])
     return np.uint8((1 - opened) * 255)

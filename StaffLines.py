@@ -8,15 +8,12 @@ from Preprocessing import *
 import cv2 as cv2
 
 def get_StartingEnding_StaffLinePosition(image, whitespaceLen,isScanned):
-    #show_images([image])
     if not isScanned:
         image = Make_IMG_HORIZONTAL(image,1,False)[0]
         image = normalizeImage(image)
         image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
-    #show_images([image])
     element = np.ones((1, int(whitespaceLen * 1.5)))
     opened = binary_opening(255 - image, selem=element)
-    ##show_images([opened])
     height, width = opened.shape
     starting = []
     ending = []
@@ -32,11 +29,9 @@ def get_StartingEnding_StaffLinePosition(image, whitespaceLen,isScanned):
             starting.append(start)
             ending.append(end)
     
-    # # gets most frequent item in list
-    # print(starting)
-    # print(ending)
+    # gets most frequent item in list
     if len(starting) == 0 and len(ending) ==0:
-        return 0 , 5*ws
+        return 0 , 5*whitespaceLen,image
     return max(set(starting), key = starting.count), max(set(ending), key = ending.count) , image
 
 def countFrequency(my_list): 
@@ -167,7 +162,6 @@ def getSLsThickness_WhiteSpacesVertically(binary, min_max=False, show_hist=False
     width = binary.shape[1]
     for col in range(width):
         lista = encodeList(binary[:, col])
-        #print(lista)
         for x, y in lista:
             if(y == 0):
                 staffLinesWidth = np.append(staffLinesWidth, x)
@@ -185,10 +179,6 @@ def getSLsThickness_Whitespaces(binary, min_max=False, vertical=False, horizonta
     if min_max:
         SLs1, WS1 = getSLsThickness_WhiteSpacesHorizontally(binary, min_max=True)
         SLs2, WS2 = getSLsThickness_WhiteSpacesVertically(binary, min_max=True)
-        # minSL = min(SLs1[0], SLs2[0])
-        # maxSL = max(SLs1[1], SLs2[1])
-        # minWS = min(WS1[0], WS2[0])
-        # maxWS = max(WS1[1], WS2[1])
         minSL = int((SLs1[0] + SLs2[0]) / 2)
         maxSL = int((SLs1[1] + SLs2[1]) / 2)
         minWS = int((WS1[0] + WS2[0]) / 2)
@@ -197,11 +187,7 @@ def getSLsThickness_Whitespaces(binary, min_max=False, vertical=False, horizonta
         WS = minWS, maxWS
         return SL, WS
     if vertical:
-        #sl2, ws2 = getSLsThickness_WhiteSpacesHorizontally(binary, min_max=min_max, show_hist=show_hist)
         return getSLsThickness_WhiteSpacesVertically(binary, min_max=min_max, show_hist=show_hist)
-        # if 0.15 < ws1 / ws2 < 7:
-        #     return sl1, ws1
-        # return sl2, ws2
     if horizontal:
         return getSLsThickness_WhiteSpacesHorizontally(binary, min_max=min_max, show_hist=show_hist)
     SlWs1 = getSLsThickness_WhiteSpacesHorizontally(binary)

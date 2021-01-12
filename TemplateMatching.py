@@ -41,7 +41,7 @@ halfPaths = ["Notes/half1.JPG", "Notes/half2.JPG"]
 wholePaths = ["Notes/whole.JPG", "Notes/whole2.JPG", "Notes/whole3.JPG"]
 dotPaths = ["Notes/dot.JPG"]
 twoDotsPaths = ["Notes/dots.JPG"]
-sharpPaths = ["Accidentals/sharp.JPG", "Accidentals/sharp2.JPG" ]#,"Accidentals/sharp-space.png"]
+sharpPaths = ["Accidentals/sharp.JPG", "Accidentals/sharp2.JPG" ,"Accidentals/sharp-space.png"]
 flatPaths = ["Accidentals/flat.JPG"]
 doubleSharpPaths = ["Accidentals/doublesharp.JPG"]
 flagPaths = ["Flags/flag.JPG"]
@@ -475,7 +475,7 @@ def matchClefs(binary, ws,Clear=True):
         if minX < binary.shape[1]/3:
             if Clear:
                 binary[:, 0:minX + int((HorizontalWhiteSpaceRatio.CLEF.value*ws))] = 255
-            #print("XCenter :" , minX)    
+            # print("XCenter :" , minX)    
             hasClef = True
 
     return hasClef
@@ -495,7 +495,6 @@ def matchTimeSig(binary, ws):
         cv2.MORPH_ELLIPSE, (ws, ws))
     locations = match(binary, times, TemplateScalingStartPercent.CLEF.value,
                       TemplateScalingEndPercent.TIME.value, MatchingThreshold.TIME.value)
-    #show_images([result, binary])
     for i in locations:
         for j in range(len(i[0])):
             result[i[0][j] + int(ws / 2), i[1][j] + int(ws / 2)] = 1
@@ -605,7 +604,6 @@ def matchDoubleSharp(binary, ws):
         if(len(i[0]) > 0):
             return 1
     return 0
-    # TODO build an array of half notes containing their positions
 
 ##############################################################################################
 #############                                                                   ##############

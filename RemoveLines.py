@@ -13,13 +13,6 @@ def removeLines(image,line_height):
     projection_img[binarized==255]=0
     projection_img[binarized==0]=1
     horizontal_projection=np.sum(projection_img,axis=1)
-
-    # Plt horizontal projection
-    # x = np.arange(binarized.shape[0])
-    # fig = plt.figure(figsize =(10, 7))
-    # plt.plot(x,horizontal_projection)
-    # plt.show()
-
     #Get peaks
     peak_threshold = horizontal_projection_parameter*horizontal_projection.max()
     boolpeaks=horizontal_projection
@@ -27,8 +20,6 @@ def removeLines(image,line_height):
     boolpeaks[boolpeaks>peak_threshold]=1
     peaks=np.where(boolpeaks)[0]    
     # Line Height Tracking Removal
-    #line_height=3
-    #addition=0
     for peak in peaks:
         sum_row=binarized[peak,:]
         addition=0
@@ -40,7 +31,6 @@ def removeLines(image,line_height):
             sum_row=np.add(addition,sum_row,dtype=float)  
         sum_row=sum_row/255
         binarized[peak,sum_row>(2*line_height+1)]=255
-    #show_images([binarized])
     return binarized,peaks
 
 # def removeLinesErod(binarized):
