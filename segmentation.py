@@ -5,6 +5,16 @@ from skimage.measure import find_contours
 from skimage.draw import rectangle
 import cv2 as cv2
 
+
+def getSegWidth(img,line_thic):
+	test=img.copy()
+	test=1-test
+	black_hist=np.zeros((img.shape[1],1))
+	for column in range(0,img.shape[1]):
+		black_hist[column,0]=(test[:,column] == 0).sum()
+	black_lines=np.where(black_hist>=line_thic)
+	return black_lines[0][0]-black_lines[0][-1]
+    
 ##############################################this segmentation based on projection and morphology and has a bad output###########################
 #############################################but its advatage that it holds the position of every black line#####################################
 def segmentwithmorph(img,white_spce,line_thick):
@@ -35,6 +45,8 @@ def segmentwithmorph(img,white_spce,line_thick):
     Ysub=np.empty(staff_num,dtype=np.uint)
     Yinf=np.empty(staff_num,dtype=np.uint)
     m=0
+    while(len(filtered_blackLines)%5!=0):
+        filtered_blackLines.append(img.shape[0])
     for i in range(0,len(filtered_blackLines),5):
         if(i>len(filtered_blackLines)-5):
             Ysub[m]=filtered_blackLines[i-5]
@@ -59,12 +71,14 @@ def segmentwithmorph(img,white_spce,line_thick):
         new_img=orig_img[Ysub_centre[i]:Yinf_centre[i],:]
         new_img[new_img==1]=255
         imgs.append(new_img)
+    show_images(imgs)
     return imgs
 
 ##########################################this approach depends on morphological opeartions and find contours and has a great output relatively#########
 ##########################################we must modify the commented parameter below to be generic###################################
 def SegmentWithMorphCont(img,white_spce,staff_thick):
     orig_img=img.copy()
+    show_images([orig_img])
     img[img==255]=1
     img=1-img
     cols = img.shape[1]
@@ -75,6 +89,7 @@ def SegmentWithMorphCont(img,white_spce,staff_thick):
     window2=np.ones((staff_height,20))
     img=binary_erosion(img,selem=window)
     img=binary_dilation(img,selem=window)
+    segWidth=getSegWidth(img,staff_thick)
     #for dilation
     img=binary_dilation(img,selem=window2)
     boxes=find_contours(img,0)
@@ -83,7 +98,8 @@ def SegmentWithMorphCont(img,white_spce,staff_thick):
     yEnd=[]
     yStartCent=[]
     yEndCent=[]
-    aspect_ratio=cols/((4*white_spce)+(5*staff_thick))
+   
+    aspect_ratio=segWidth/((4*white_spce)+(5*staff_thick))
     for box in boxes:
         yMax = int(np.max(box[:,0]))
         yMin = int(np.min(box[:,0]))

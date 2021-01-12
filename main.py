@@ -24,7 +24,7 @@ img_dir = "./dummmy/"
 for path in os.listdir(img_dir):
     try:
         img = io.imread(img_dir+path,as_gray=True)
-
+        show_images([img])
         isScanned = False
         #Normalize ,binarize and rotate the img
         img = normalizeImage(img)
